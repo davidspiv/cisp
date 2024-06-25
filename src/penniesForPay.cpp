@@ -2,7 +2,7 @@
 
 void display(std::string, int = 0);
 std::string getResult(int);
-void error(std::string);
+void isError(std::string);
 
 int main() {
   int userInput;
@@ -11,7 +11,7 @@ int main() {
   display("Enter number of days: ");
   std::cin >> userInput;
 
-  if (!userInput) error("Did not enter an integer greater than 0.");
+  if (!userInput) isError("Did not enter an integer greater than 0.");
 
   result = getResult(userInput);
   display(result, 1);
@@ -61,7 +61,7 @@ std::string formatResult(int resultNumber) {
   return "$" + dollarsString + "." + centsString;
 }
 
-void error(std::string err) {
+void isError(std::string err) {
   display(err, 1);
   exit(1);
 }

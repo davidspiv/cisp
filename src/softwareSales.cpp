@@ -4,7 +4,7 @@ void display(std::string, int = 0);
 int calcDiscount(int);
 int calcPrice(int, int);
 std::string formatPrice(int);
-void error(std::string);
+void isError(std::string);
 
 int main() {
   int packageQtty, discount, totalPrice;
@@ -14,7 +14,7 @@ int main() {
 
   // range maximum is defined by calculation in getPrice()
   if (!packageQtty || packageQtty >= 2147483647 / 9900 / 2)
-    error("Input not within integer range.");
+    isError("Input not within integer range.");
 
   discount = calcDiscount(packageQtty);
   totalPrice = calcPrice(packageQtty, discount);
@@ -85,7 +85,7 @@ std::string formatPrice(int result) {
   return formattedResult;
 }
 
-void error(std::string err) {
+void isError(std::string err) {
   display(err, 1);
   exit(1);
 }

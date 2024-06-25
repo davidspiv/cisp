@@ -4,7 +4,7 @@ int getClassCount(char);
 void display(std::string, int = 0);
 int calcTotal(int, int, int);
 std::string formatPrice(int);
-void error(std::string);
+void isError(std::string);
 
 int main() {
   int classACount, classBCount, classCCount, totalPrice;
@@ -27,7 +27,7 @@ int getClassCount(char classLetter) {
 
   display("Number of " + classString + " class tickets: ");
   std::cin >> count;
-  if (!count) error("Did not enter an integer greater than 0.");
+  if (!count) isError("Did not enter an integer greater than 0.");
   return count;
 }
 
@@ -47,8 +47,7 @@ int calcTotal(int a, int b, int c) {
 }
 
 std::string formatPrice(int result) {
-  std::string resultString, hundreds, thousands, millions, billions,
-      formattedResult;
+  std::string resultString, hundreds, thousands, millions, formattedResult;
 
   resultString = std::to_string(result);
   millions = thousands = "";
@@ -72,7 +71,7 @@ std::string formatPrice(int result) {
   return formattedResult;
 }
 
-void error(std::string err) {
+void isError(std::string err) {
   display(err, 1);
   exit(1);
 }
