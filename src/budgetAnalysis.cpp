@@ -1,38 +1,33 @@
 #include <iostream>
+#include <string>
 
-void display(std::string, int = 0);
+void display(std::string);
 int getInput();
 int getTransactionSum();
 std::string getResultString(int);
 std::string formatUsd(int);
 bool isOverflow(int);
-void error(std::string);
+void endProgram(std::string);
 
 int main() {
   int budgetInput, transactionSum, budgetDiff;
   std::string resultString;
 
-  display("Enter this month's budget: ");
+  std::cout << "Enter this month's budget: ";
 
   budgetInput = getInput();
 
-  display("Type an integer and press enter to input a transaction amount.", 1);
-  display("Enter as many transactions as you'd like.", 1);
-  display("Then enter \"0\" to initiate the budget analysis calculation.", 1);
+  std::cout <<
+      R"(Type an integer and press enter to input a transaction amount.
+Enter as many transactions as you'd like.
+Then enter 0 to initiate the calculation.
+)";
 
   transactionSum = getTransactionSum();
   budgetDiff = budgetInput - transactionSum;
   resultString = getResultString(budgetDiff);
 
-  display(resultString, 1);
-}
-
-void display(std::string input, int returnFlg) {
-  if (returnFlg) {
-    std::cout << input << std::endl;
-    return;
-  }
-  std::cout << input;
+  std::cout << (resultString + "\n");
 }
 
 int getInput() {
@@ -40,37 +35,37 @@ int getInput() {
   std::cin >> input;
 
   if (isOverflow(input)) {
-    error("Budget input outside of integer range");
+    endProgram("Budget input outside of integer range");
   };
   return input;
 }
 
 int getTransactionSum() {
-  int userInput = 1, total = 0;
-
+  int userInput, total = 0;
+  std::cin >> userInput;
   while (userInput) {
-    std::cin >> userInput;
     if (isOverflow(userInput)) {
-      error("Transaction outside of integer range");
+      std::cout << "Transaction outside of integer range, not included";
+      std::cin.clear();
+    } else {
+      total += userInput;
     }
-    total += userInput;
+    std::cin >> userInput;
   }
 
-  if (isOverflow(total)) error("Transaction sum outside of integer range");
+  if (isOverflow(total)) endProgram("Transaction sum outside of integer range");
   return total;
 }
 
 std::string getResultString(int budgetDiff) {
-  std::string resultStringComponent;
+  std::string resultStringComponent = " under ";
 
   if (budgetDiff < 0) {
-    budgetDiff = budgetDiff * -1;
-    resultStringComponent = " over your budget.";
-  } else {
-    resultStringComponent = " under your budget.";
+    budgetDiff *= -1;
+    resultStringComponent = " over ";
   }
 
-  return "You are " + formatUsd(budgetDiff) + resultStringComponent;
+  return "You are " + formatUsd(budgetDiff) + resultStringComponent + "budget.";
 }
 
 std::string formatUsd(int input) {
@@ -98,7 +93,7 @@ bool isOverflow(int input) {
   return input == 2147483647 || input == -2147483648;
 }
 
-void error(std::string err) {
-  display(err, 1);
+void endProgram(std::string err) {
+  std::cout << err + "\n";
   exit(1);
 }
