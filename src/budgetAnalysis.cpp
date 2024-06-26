@@ -5,7 +5,7 @@ void display(std::string, bool = false);
 int getInput();
 int getSumFromInputs();
 std::string formatUsd(int);
-std::string makeResponseString(int);
+std::string buildResponseString(int);
 void endProgram(std::string);
 bool isOverflow(int);
 
@@ -21,7 +21,7 @@ Then enter 0 to initiate the calculation.
 
   const int transactionSum = getSumFromInputs();
   const int budgetDiff = budgetInput - transactionSum;
-  const std::string responseString = makeResponseString(budgetDiff);
+  const std::string responseString = buildResponseString(budgetDiff);
 
   display(responseString);
 }
@@ -69,7 +69,7 @@ std::string formatUsd(int input) {
   return "$" + usdString;
 }
 
-std::string makeResponseString(int budgetDiff) {
+std::string buildResponseString(int budgetDiff) {
   const std::string resultStringComponent =
       budgetDiff < 0 ? " over " : " under ";
 

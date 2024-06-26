@@ -1,9 +1,13 @@
-## STADIUM SEATING
+## SEARCH BENCHMARKS
+Design an application that has an array of at least 20 integers. It should call a module that uses the sequential search algorithm to locate one of the values. The module should keep a count of the number of comparisons it makes until it finds the value. Then the program should call another module that uses the binary search algorithm to locate the same value. It should also keep a count of the number of comparisons it makes. Display these values on the screen.
 
+## SORTING BENCHMARKS
+Modify the modules presented in this chapter that perform the bubble sort, selection sort, and insertion sort algorithms on an Integer array, such that each module keeps a count of the number of swaps it makes. Then, design an application that uses three identical arrays of at least 20 integers. It should call each module on a different array, and display the number of swaps made by each algorithm.
+
+## STADIUM SEATING
 There are three seating categories at a stadium. For a softball game, Class A seats cost $15, Class B seats cost $12, and Class C seats cost $9. Write C++ program using modular that asks how many tickets for each class of seats were sold, and then displays the amount of income generated from ticket sales.
 
 ## SOFTWARE SALES
-
 A software company sells a package that retails for $99. Quantity discounts are given according to the following table:
 
 | Quantity | Discount |
@@ -16,12 +20,10 @@ A software company sells a package that retails for $99. Quantity discounts are 
 Design a program that asks the user to enter the number of packages purchased. The program should then display the amount of the discount (if any) and the total amount of the purchase after the discount.
 
 ## PENNIES FOR PAY
-
 Design a program that calculates the amount of money a person would earn over a period of time if his or her salary is one penny the first day, two pennies the second day, and continues to double each day. The program should ask the user for the number of days. Display a table showing what the
 salary was for each day, and then show the total pay at the end of the period. The output should be displayed in a dollar amount, not the number of pennies.
 
 ## CHARGE ACCOUNT VALIDATION
-
 Design a program that asks the user to enter a charge account number. The program should determine whether the number is valid by comparing it to the following list of valid charge account
 numbers:
 
