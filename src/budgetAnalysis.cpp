@@ -21,49 +21,32 @@ int getInput() {
 }
 
 std::string formatUsd(int input) {
-  std::string anonChunk, hundredsChunk, usdFormatted = "$";
+  std::string usdFormatted = "$";
 
   const std::string usdStr = std::to_string(input);
   const int commas = (usdStr.size() - 1) / 3;
 
   if (commas) {
-    int remainder = usdStr.size() % (commas * 3);
-    int startIndex = remainder ? remainder : 3;
+    const int remainder = usdStr.size() % (commas * 3);
+    const int firstCommaIndex = remainder ? remainder : 3;
 
-    for (int i = 0; i < commas; i++) {
-      anonChunk = !i ? usdStr.substr(0, usdStr.size() - commas * 3) + ","
-                     : usdStr.substr(startIndex + 3 * (i - 1), 3) + ",";
+    const std::string largestChunk = usdStr.substr(0, firstCommaIndex) + ",";
+    usdFormatted += largestChunk;
+
+    for (int i = 1; i < commas; i++) {
+      const std::string anonChunk =
+          usdStr.substr(firstCommaIndex + (i - 1) * 3, 3) + ",";
       usdFormatted += anonChunk;
     }
   }
 
-  hundredsChunk =
+  const std::string hundredsChunk =
       usdStr.size() > 3 ? usdStr.substr(usdStr.size() - 3, 3) : usdStr;
+
   usdFormatted += hundredsChunk;
 
   return usdFormatted;
 }
-
-// std::string formatUsd(int input) {
-//   std::string usdString, hundreds, thousands, millions, usdFormatted;
-
-//   usdString = std::to_string(input);
-//   millions = thousands = "";
-
-//   if (usdString.size() > 6) {
-//     millions = usdString.substr(0, usdString.size() - 6) + ",";
-//     usdString = usdString.substr(usdString.size() - 6, usdString.size());
-//   }
-
-//   if (usdString.size() > 3) {
-//     thousands = usdString.substr(0, usdString.size() - 3) + ",";
-//     usdString = usdString.substr(usdString.size() - 3, usdString.size());
-//   }
-
-//   hundreds = usdString;
-//   usdFormatted = "$" + millions + thousands + hundreds;
-//   return usdFormatted;
-// }
 
 int getTransactionSum() {
   int userInput, total = 0;
