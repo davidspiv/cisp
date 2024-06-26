@@ -1,98 +1,87 @@
 #include <iostream>
 #include <string>
 
-bool isOverflow(int input) {
-  return input == 2147483647 || input == -2147483648;
+void display(std::string, bool = false);
+int getInput();
+int getSumFromInputs();
+std::string formatUsd(int);
+std::string makeResponseString(int);
+void endProgram(std::string);
+bool isOverflow(int);
+
+int main() {
+  display("Enter this month's budget: ");
+
+  const int budgetInput = getInput();
+
+  display(R"(Type an integer and press enter to input a transaction amount.
+Enter as many transactions as you'd like.
+Then enter 0 to initiate the calculation.
+)");
+
+  const int transactionSum = getSumFromInputs();
+  const int budgetDiff = budgetInput - transactionSum;
+  const std::string responseString = makeResponseString(budgetDiff);
+
+  display(responseString);
 }
 
-void endProgram(std::string err) {
-  std::cout << err + "\n";
-  exit(1);
+void display(std::string output, bool returnFlag) {
+  if (returnFlag) output += "\n";
+  std::cout << output;
 }
 
 int getInput() {
   int input;
+
   std::cin >> input;
 
-  if (isOverflow(input)) {
-    endProgram("Budget input outside of integer range");
-  };
+  while (std::cin.fail()) {
+    display("Input outside of integer range, try again\n");
+
+    std::cin.clear();
+    std::cin.ignore(1000, '\n');
+    std::cin >> input;
+  }
+
   return input;
 }
 
-std::string formatUsd(int input) {
-  std::string usdFormatted = "$";
+int getSumFromInputs() {
+  int total = 0;
+  int userInput = getInput();
 
-  const std::string usdStr = std::to_string(input);
-  const int commas = (usdStr.size() - 1) / 3;
-
-  if (commas) {
-    const int remainder = usdStr.size() % (commas * 3);
-    const int firstCommaIndex = remainder ? remainder : 3;
-
-    const std::string largestChunk = usdStr.substr(0, firstCommaIndex) + ",";
-    usdFormatted += largestChunk;
-
-    for (int i = 1; i < commas; i++) {
-      const std::string anonChunk =
-          usdStr.substr(firstCommaIndex + (i - 1) * 3, 3) + ",";
-      usdFormatted += anonChunk;
-    }
-  }
-
-  const std::string hundredsChunk =
-      usdStr.size() > 3 ? usdStr.substr(usdStr.size() - 3, 3) : usdStr;
-
-  usdFormatted += hundredsChunk;
-
-  return usdFormatted;
-}
-
-int getTransactionSum() {
-  int userInput, total = 0;
-  std::cin >> userInput;
   while (userInput) {
-    if (isOverflow(userInput)) {
-      std::cout << "Transaction outside of integer range, not included";
-      std::cin.clear();
-    } else {
-      total += userInput;
-    }
-    std::cin >> userInput;
+    total += userInput;
+    if (isOverflow(total))
+      endProgram("Calc failed, sum outside of integer range");
+    userInput = getInput();
   }
-
-  if (isOverflow(total)) endProgram("Transaction sum outside of integer range");
   return total;
 }
 
-std::string getResultString(int budgetDiff) {
-  std::string resultStringComponent = " under ";
-
-  if (budgetDiff < 0) {
-    budgetDiff *= -1;
-    resultStringComponent = " over ";
+std::string formatUsd(int input) {
+  std::string usdString = std::to_string(input);
+  for (int i = usdString.size() - 3; i > 0; i = i - 3) {
+    usdString.insert(i, ",");
   }
 
-  return "Result: " + formatUsd(budgetDiff) + resultStringComponent + "budget.";
+  return "$" + usdString;
 }
 
-int main() {
-  int budgetInput, transactionSum, budgetDiff;
-  std::string resultString;
+std::string makeResponseString(int budgetDiff) {
+  const std::string resultStringComponent =
+      budgetDiff < 0 ? " over " : " under ";
 
-  std::cout << "Enter this month's budget: ";
+  return "Result: " + formatUsd(abs(budgetDiff)) + resultStringComponent +
+         "budget.\n";
+}
 
-  budgetInput = getInput();
+void endProgram(std::string err) {
+  display(err, 1);
+  exit(1);
+}
 
-  std::cout <<
-      R"(Type an integer and press enter to input a transaction amount.
-Enter as many transactions as you'd like.
-Then enter 0 to initiate the calculation.
-)";
-
-  transactionSum = getTransactionSum();
-  budgetDiff = budgetInput - transactionSum;
-  resultString = getResultString(budgetDiff);
-
-  std::cout << (resultString + "\n");
+bool isOverflow(int input) {
+  return input == 2147483647 || input == -2147483648;
 }
