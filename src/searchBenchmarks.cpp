@@ -2,16 +2,13 @@
 #include <string>
 
 void display(std::string, bool = false);
-std::string buildArrStr(int[]);
+int* popTestArr(int*, int);
+std::string buildArrStr(int[], int);
 
 int main() {
-  int arr[20] = {};
-  for (int i = 0; i < 20; i++) {
-    int randomNum = rand() % 10 + 1;
-    arr[i] = randomNum;
-  }
-
-  display(buildArrStr(arr), 1);
+  int testArr[10];
+  popTestArr(testArr, 10);
+  display(buildArrStr(testArr, 10), 1);
 }
 
 void display(std::string output, bool returnFlag) {
@@ -19,10 +16,19 @@ void display(std::string output, bool returnFlag) {
   std::cout << output;
 }
 
-std::string buildArrStr(int arr[]) {
+int* popTestArr(int* arr, int size) {
+  for (int i = 0; i < 10; i++) {
+    int randomNum = rand();
+    arr[i] = randomNum;
+  }
+  return arr;
+}
+
+std::string buildArrStr(int arr[], int size) {
   std::string resultString;
-  for (int i = 0; i < 20; i++) {
-    resultString += " " + std::to_string(arr[i]) + ",";
+
+  for (int i = 0; i < size; i++) {
+    resultString += " " + std::to_string(arr[i]) + ",\n";
   }
 
   return resultString;
