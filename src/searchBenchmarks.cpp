@@ -6,7 +6,6 @@ void display(std::string, bool = false);
 int* popTestArr(int*, int);
 int sequentialSearch(int*, int);
 int binarySearch(int*, int);
-std::string buildArrStr(int[], int);
 
 const int target = 999999999;
 
@@ -18,7 +17,6 @@ int main() {
           1);
   std::sort(testArr, testArr + arrSize);
   display("BIN COUNT: " + std::to_string(binarySearch(testArr, arrSize)), 1);
-  // display(buildArrStr(testArr, arrSize), 1);
 }
 
 void display(std::string output, bool returnFlag) {
@@ -66,13 +64,3 @@ int binarySearch(int* arr, int size) {
     return -1;
   }
 }
-
-// std::string buildArrStr(int arr[], int size) {
-//   std::string resultString;
-
-//   for (int i = 0; i < size; i++) {
-//     resultString += " " + std::to_string(arr[i]) + ",\n";
-//   }
-
-//   return resultString;
-// }
