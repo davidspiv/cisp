@@ -9,12 +9,13 @@ int binarySearch(int*, int);
 // std::string buildArrStr(int[], int);
 
 int main() {
-  const int arrSize = 10;
+  const int arrSize = 100;
   int testArr[arrSize];
   popTestArr(testArr, arrSize);
-  display(std::to_string(sequentialSearch(testArr, arrSize)), 1);
+  display("SEQ COUNT: " + std::to_string(sequentialSearch(testArr, arrSize)),
+          1);
   std::sort(testArr, testArr + arrSize);
-  display(std::to_string(binarySearch(testArr, arrSize)), 1);
+  display("BIN COUNT: " + std::to_string(binarySearch(testArr, arrSize)), 1);
   // display(buildArrStr(testArr, arrSize), 1);
 }
 
@@ -28,7 +29,7 @@ int* popTestArr(int* arr, int size) {
     int randomNum = rand();
     arr[i] = randomNum;
   }
-  arr[5] = 69;
+  arr[size / 2] = 69;
   return arr;
 }
 
@@ -38,16 +39,19 @@ int sequentialSearch(int* arr, int size) {
     count++;
     if (arr[i] == 69) return count;
   };
-  return size;
+  return 0;
 }
 
 int binarySearch(int* arr, int size) {
   int count = 0;
-  while (int i = 0; i < size; i++) {
+  int middleIndex = size / 2;
+  while (middleIndex && middleIndex < size) {
     count++;
-    if (arr[i] == 69) return count;
+    middleIndex = arr[middleIndex] < 69 ? middleIndex + (middleIndex / 2)
+                                        : middleIndex / 2;
+    if (arr[middleIndex] == 69) return count;
   };
-  return size;
+  return 0;
 }
 
 // std::string buildArrStr(int arr[], int size) {

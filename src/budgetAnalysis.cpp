@@ -1,32 +1,34 @@
 #include <iostream>
 #include <string>
 
-void display(std::string, bool = false);
+using String = std::string;
+
+void display(String, bool = false);
 int getInput();
 int getSumFromInputs();
-std::string addCommas(int);
-std::string buildResponseString(int);
-void endProgram(std::string);
 bool isOverflow(int, int);
+String buildResponseString(int);
+String insertCommas(int);
+void endProgram(String);
 
 int main() {
   display("Enter this month's budget: ");
 
   const int budgetInput = getInput();
 
-  display(R"(Type an integer and press enter to input a transaction amount.
-Enter as many transactions as you'd like.
-Then enter 0 to initiate the calculation.
-)");
+  display("\nType an integer and press enter to input a transaction amount.",
+          1);
+  display("Enter as many transactions as you'd like.", 1);
+  display("Then enter 0 to initiate the calculation.\n", 1);
 
   const int transactionSum = getSumFromInputs();
   const int budgetDiff = budgetInput - transactionSum;
-  const std::string responseString = buildResponseString(budgetDiff);
+  const String responseString = buildResponseString(budgetDiff);
 
-  display(responseString);
+  display(responseString, 1);
 }
 
-void display(std::string output, bool returnFlag) {
+void display(String output, bool returnFlag) {
   if (returnFlag) output += "\n";
   std::cout << output;
 }
@@ -59,19 +61,6 @@ int getSumFromInputs() {
   return total;
 }
 
-std::string buildResponseString(int budgetDiff) {
-  const std::string resultStringComponent =
-      budgetDiff < 0 ? " over " : " under ";
-
-  return "Result: $" + addCommas(abs(budgetDiff)) + resultStringComponent +
-         "budget.\n";
-}
-
-void endProgram(std::string err) {
-  display(err, 1);
-  exit(1);
-}
-
 bool isOverflow(int addendA, int addendB) {
   const int sum = addendA + addendB;
   if (addendA > 0 && addendB > 0 && sum < 0) return true;
@@ -79,10 +68,22 @@ bool isOverflow(int addendA, int addendB) {
   return false;
 }
 
-std::string addCommas(int input) {
-  std::string usdString = std::to_string(input);
+String buildResponseString(int budgetDiff) {
+  const String resultStringComponent = budgetDiff < 0 ? " over " : " under ";
+
+  return "Result: $" + insertCommas(abs(budgetDiff)) + resultStringComponent +
+         "budget.";
+}
+
+String insertCommas(int input) {
+  String usdString = std::to_string(input);
   for (int i = usdString.size() - 3; i > 0; i = i - 3) {
     usdString.insert(i, ",");
   }
   return usdString;
+}
+
+void endProgram(String err) {
+  display(err, 1);
+  exit(1);
 }
