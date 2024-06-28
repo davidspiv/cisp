@@ -4,10 +4,10 @@
 void display(std::string, bool = false);
 int getInput();
 int getSumFromInputs();
-std::string formatUsd(int);
+std::string addCommas(int);
 std::string buildResponseString(int);
 void endProgram(std::string);
-bool isOverflow(int);
+bool isOverflow(int, int);
 
 int main() {
   display("Enter this month's budget: ");
@@ -43,7 +43,6 @@ int getInput() {
     std::cin.ignore(1000, '\n');
     std::cin >> input;
   }
-
   return input;
 }
 
@@ -52,28 +51,19 @@ int getSumFromInputs() {
   int userInput = getInput();
 
   while (userInput) {
+    if (isOverflow(total, userInput)) endProgram("Calc failed");
+
     total += userInput;
-    if (isOverflow(total))
-      endProgram("Calc failed, sum outside of integer range");
     userInput = getInput();
   }
   return total;
-}
-
-std::string formatUsd(int input) {
-  std::string usdString = std::to_string(input);
-  for (int i = usdString.size() - 3; i > 0; i = i - 3) {
-    usdString.insert(i, ",");
-  }
-
-  return "$" + usdString;
 }
 
 std::string buildResponseString(int budgetDiff) {
   const std::string resultStringComponent =
       budgetDiff < 0 ? " over " : " under ";
 
-  return "Result: " + formatUsd(abs(budgetDiff)) + resultStringComponent +
+  return "Result: $" + addCommas(abs(budgetDiff)) + resultStringComponent +
          "budget.\n";
 }
 
@@ -82,6 +72,17 @@ void endProgram(std::string err) {
   exit(1);
 }
 
-bool isOverflow(int input) {
-  return input == 2147483647 || input == -2147483648;
+bool isOverflow(int addendA, int addendB) {
+  const int sum = addendA + addendB;
+  if (addendA > 0 && addendB > 0 && sum < 0) return true;
+  if (addendA < 0 && addendB < 0 && sum > 0) return true;
+  return false;
+}
+
+std::string addCommas(int input) {
+  std::string usdString = std::to_string(input);
+  for (int i = usdString.size() - 3; i > 0; i = i - 3) {
+    usdString.insert(i, ",");
+  }
+  return usdString;
 }
