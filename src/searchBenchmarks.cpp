@@ -6,10 +6,12 @@ void display(std::string, bool = false);
 int* popTestArr(int*, int);
 int sequentialSearch(int*, int);
 int binarySearch(int*, int);
-// std::string buildArrStr(int[], int);
+std::string buildArrStr(int[], int);
+
+const int target = 999999999;
 
 int main() {
-  const int arrSize = 100;
+  const int arrSize = 100000;
   int testArr[arrSize];
   popTestArr(testArr, arrSize);
   display("SEQ COUNT: " + std::to_string(sequentialSearch(testArr, arrSize)),
@@ -29,7 +31,7 @@ int* popTestArr(int* arr, int size) {
     int randomNum = rand();
     arr[i] = randomNum;
   }
-  arr[size / 2] = 69;
+  arr[size / 2] = target;
   return arr;
 }
 
@@ -37,21 +39,32 @@ int sequentialSearch(int* arr, int size) {
   int count = 0;
   for (int i = 0; i < size; i++) {
     count++;
-    if (arr[i] == 69) return count;
+    if (arr[i] == target) return count;
   };
-  return 0;
+  return -1;
 }
 
 int binarySearch(int* arr, int size) {
+
   int count = 0;
-  int middleIndex = size / 2;
-  while (middleIndex && middleIndex < size) {
-    count++;
-    middleIndex = arr[middleIndex] < 69 ? middleIndex + (middleIndex / 2)
-                                        : middleIndex / 2;
-    if (arr[middleIndex] == 69) return count;
-  };
-  return 0;
+  int low = 0;
+  int high = size - 1;
+
+  {
+    while (low <= high) {
+      const int mid = low + (high - low) / 2;
+      count++;
+      if (arr[mid] == target) return count;
+      if (arr[mid] < target) {
+        low = mid + 1;
+      }
+
+      else {
+        high = mid - 1;
+      }
+    }
+    return -1;
+  }
 }
 
 // std::string buildArrStr(int arr[], int size) {
