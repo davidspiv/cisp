@@ -3,33 +3,36 @@
 
 using String = std::string;
 
-void display(String, bool = false);
+void display(String output, bool carriageRtn = false);
 int getInput();
 int getSumFromInputs();
-bool isOverflow(int, int);
-String buildResponseString(int);
-String insertCommas(int);
-void endProgram(String);
+bool isOverflow(int addendA, int addendB);
+String buildResponseString(int budgetDiff);
+String insertCommas(int input);
+void endProgram(String err);
 
 int main() {
   display("Enter this month's budget: ");
 
   const int budgetInput = getInput();
 
-  display("\nType an integer and press enter to input a transaction amount.",
-          1);
-  display("Enter as many transactions as you'd like.", 1);
-  display("Then enter 0 to initiate the calculation.\n", 1);
+  display(R"(
+Type an integer and press enter to input a transaction amount.
+Enter as many transactions as you'd like.
+Then enter 0 to initiate the calculation.
+
+)");
 
   const int transactionSum = getSumFromInputs();
   const int budgetDiff = budgetInput - transactionSum;
   const String responseString = buildResponseString(budgetDiff);
 
-  display(responseString, 1);
+  display(responseString, true);
 }
 
-void display(String output, bool returnFlag) {
-  if (returnFlag) output += "\n";
+void display(String output, bool carriageRtn) {
+  if (carriageRtn) output += "\n";
+
   std::cout << output;
 }
 
@@ -39,7 +42,7 @@ int getInput() {
   std::cin >> input;
 
   while (std::cin.fail()) {
-    display("Input outside of integer range, try again\n");
+    display("Input outside of integer range, try again", true);
 
     std::cin.clear();
     std::cin.ignore(1000, '\n');
@@ -84,6 +87,6 @@ String insertCommas(int input) {
 }
 
 void endProgram(String err) {
-  display(err, 1);
+  display(err, true);
   exit(1);
 }
