@@ -1,35 +1,37 @@
 #include <iostream>
 #include <string>
 
-void display(std::string output, bool returnFlag);
+void display(std::string output, bool returnFlag = 0);
 int* popTestArr(int* arr, int size);
-std::string buildArrStr(int* arr, int size);
 int bubbleSort(int*, int);
 int selectSort(int*, int);
 int insertSort(int*, int);
 
 int main() {
-  const int arrSize = 10;
+  const int arrSize = 20;
   int orgArr[arrSize], bubbleSortArr[arrSize], selectSortArr[arrSize],
       insertSortArr[arrSize];
   popTestArr(orgArr, arrSize);
+
   for (int i = 0; i < arrSize; i++) {
     bubbleSortArr[i] = selectSortArr[i] = insertSortArr[i] = orgArr[i];
   }
+
   const int bubbleSortSwaps = bubbleSort(bubbleSortArr, arrSize);
   const int selectSortSwaps = selectSort(selectSortArr, arrSize);
   const int insertSortSwaps = insertSort(insertSortArr, arrSize);
 
-  display("ORIG ARR:\n" + buildArrStr(orgArr, arrSize), 1);
-  display("BUBBLE ARR SWAPS[" + std::to_string(bubbleSortSwaps) + "]:\n" +
-              buildArrStr(bubbleSortArr, arrSize),
-          1);
-  display("SELECT ARR SWAPS[" + std::to_string(selectSortSwaps) + "]:\n" +
-              buildArrStr(selectSortArr, arrSize),
-          1);
-  display("INSERT ARR SWAPS[" + std::to_string(insertSortSwaps) + "]:\n" +
-              buildArrStr(insertSortArr, arrSize),
-          1);
+  for (int i = 0; i < arrSize; i++) {
+    if (bubbleSortArr[i] != selectSortArr[i] ||
+        bubbleSortArr[i] != insertSortArr[i]) {
+      display("Error with sorting: arrays do not match", 1);
+      return 1;
+    }
+  }
+
+  display("INSERT ARR SWAPS " + std::to_string(insertSortSwaps), 1);
+  display("BUBBLE ARR SWAPS " + std::to_string(bubbleSortSwaps), 1);
+  display("SELECT ARR SWAPS " + std::to_string(selectSortSwaps), 1);
 }
 
 void display(std::string output, bool returnFlag) {
@@ -87,14 +89,4 @@ int insertSort(int* arr, int arrSize) {
     count++;
   }
   return count;
-}
-
-std::string buildArrStr(int* arr, int size) {
-  std::string resultString;
-
-  for (int i = 0; i < size; i++) {
-    resultString += " " + std::to_string(arr[i]) + ",\n";
-  }
-
-  return resultString;
 }
