@@ -23,18 +23,16 @@ int main() {
   display("Enter inches of rainfall per month.", 1);
 
   for (int i = 0; i < numMonths; i++) {
+    // populate
     monthDataArr[i].name = monthNameArr[i];
     const int inches = getInches(monthDataArr[i]);
     monthDataArr[i].inches = inches;
+
+    // calculate
     total += inches;
-  }
-
-  low, high = monthDataArr[0].inches;
-
-  for (int i = 0; i < numMonths; i++) {
-    const int inches = monthDataArr[i].inches;
+    if (!i) low = high = inches;
     if (inches > high) high = inches;
-    if (inches < high) low = inches;
+    if (inches < low) low = inches;
   }
 
   display("\nTOTAL   : " + addCommas(total), 1);
