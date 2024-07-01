@@ -1,7 +1,9 @@
 #include <iostream>
 #include <string>
 
-void display(std::string output, bool returnFlag = 0);
+using String = std::string;
+
+void display(String output, bool returnFlag = 0);
 int* popTestArr(int* arr, int size);
 int bubbleSort(int*, int);
 int selectSort(int*, int);
@@ -34,7 +36,7 @@ int main() {
   display("SELECT ARR SWAPS " + std::to_string(selectSortSwaps), 1);
 }
 
-void display(std::string output, bool returnFlag) {
+void display(String output, bool returnFlag) {
   if (returnFlag) output += "\n";
   std::cout << output;
 }

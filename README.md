@@ -1,3 +1,6 @@
+## Odd/Even Counter
+Design C++ program that generates 100 random numbers, and keeps a count of how many of those random numbers are even and how many are odd.
+
 ## Rainfall Statistics
 Design C++ program that lets the user enter the total rainfall for each of 12 months into an array. The program should calculate and display the total rainfall for the year, the average monthly rainfall, and the months with the highest and lowest amounts.
 

@@ -10,7 +10,7 @@ struct Month {
 
 void display(String output, bool carriageRtn = false);
 int getInput();
-int getInches(Month month);
+int setInches(Month month);
 std::string addCommas(int input);
 
 int main() {
@@ -20,13 +20,13 @@ int main() {
       "july",    "august",   "september", "october", "november", "december"};
   Month monthDataArr[numMonths];
   int total = 0, average, high, low;
-  display("Enter inches of rainfall per month.", 1);
+  display("Enter inches of rainfall per month", 1);
 
   for (int i = 0; i < numMonths; i++) {
+    int inches;
     // populate
     monthDataArr[i].name = monthNameArr[i];
-    const int inches = getInches(monthDataArr[i]);
-    monthDataArr[i].inches = inches;
+    monthDataArr[i].inches = inches = setInches(monthDataArr[i]);
 
     // calculate
     total += inches;
@@ -47,7 +47,7 @@ void display(String output, bool carriageRtn) {
   std::cout << output;
 }
 
-int getInches(Month month) {
+int setInches(Month month) {
   display(month.name + ": ");
   return getInput();
 }
