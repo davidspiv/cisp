@@ -1,3 +1,6 @@
+#include <iostream>
+#include <string>
+
 std::string buildArrStr(int* arr, int size) {
   std::string resultString;
 
