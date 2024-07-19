@@ -1,3 +1,9 @@
+## Payroll Program with Input Validation
+Write C++ payroll program that prompts the user to enter an employee’s hourly pay rate and the number of hours worked. Validate the user’s input so that only pay rates in the range of $7.50 through $18.25 and hours in the range of 0 through 40 are accepted. The program should display the employee’s gross pay.
+
+## EXCHANGE RATE
+Write a C++ program that converts US dollar to HKD dollar with a fix rate with 7.8. The program should ask user enter how many HKD and the program will convert it for the rate 7.8 into US dollar.
+
 ## Odd/Even Counter
 Design C++ program that generates 100 random numbers, and keeps a count of how many of those random numbers are even and how many are odd.
 

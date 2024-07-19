@@ -8,14 +8,14 @@ void display(std::string output, bool returnFlag = 0);
 int main() {
   int even = 0, odd = 0;
 
-  srand(time(0));  // random seed based on current time
+  srand(time(0));
 
   for (int i = 0; i < 100; i++) {
     if (rand() % 2) {
-      even++;
+      odd++;
       continue;
     }
-    odd++;
+    even++;
   }
 
   display("Even : " + std::to_string(even), 1);

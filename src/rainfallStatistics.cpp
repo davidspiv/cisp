@@ -19,7 +19,7 @@ int main() {
       "january", "february", "march",     "april",   "may",      "june",
       "july",    "august",   "september", "october", "november", "december"};
   Month monthDataArr[numMonths];
-  int total = 0, average, high, low;
+  int total = 0, high, low;
   display("Enter inches of rainfall per month", 1);
 
   for (int i = 0; i < numMonths; i++) {
@@ -47,11 +47,6 @@ void display(String output, bool carriageRtn) {
   std::cout << output;
 }
 
-int setInches(Month month) {
-  display(month.name + ": ");
-  return getInput();
-}
-
 int getInput() {
   int input;
 
@@ -66,6 +61,12 @@ int getInput() {
   }
   return input;
 }
+
+int setInches(Month month) {
+  display(month.name + ": ");
+  return getInput();
+}
+
 
 std::string addCommas(int input) {
   String inputString = std::to_string(input);

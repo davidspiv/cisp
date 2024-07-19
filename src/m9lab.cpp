@@ -7,35 +7,34 @@ using String = std::string;
 
 void display(String output, bool returnFlag = 0);
 int* popTestArr(int* arr, int size);
-int bubbleSort(int*, int);
 int selectSort(int*, int);
 int insertSort(int*, int);
 
 int main() {
   const int arrSize = 20;
-  int orgArr[arrSize], bubbleSortArr[arrSize], selectSortArr[arrSize],
-      insertSortArr[arrSize];
+  int orgArr[arrSize], selectSortArr[arrSize], insertSortArr[arrSize];
   popTestArr(orgArr, arrSize);
 
   for (int i = 0; i < arrSize; i++) {
-    bubbleSortArr[i] = selectSortArr[i] = insertSortArr[i] = orgArr[i];
+    selectSortArr[i] = insertSortArr[i] = orgArr[i];
   }
 
-  const int bubbleSortSwaps = bubbleSort(bubbleSortArr, arrSize);
   const int selectSortSwaps = selectSort(selectSortArr, arrSize);
   const int insertSortSwaps = insertSort(insertSortArr, arrSize);
 
   for (int i = 0; i < arrSize; i++) {
-    if (bubbleSortArr[i] != selectSortArr[i] ||
-        bubbleSortArr[i] != insertSortArr[i]) {
+    if (selectSortArr[i] != insertSortArr[i]) {
       display("Error with sorting: arrays do not match", 1);
       return 1;
     }
   }
 
-  display("INSERT ARR SWAPS " + std::to_string(insertSortSwaps), 1);
-  display("BUBBLE ARR SWAPS " + std::to_string(bubbleSortSwaps), 1);
-  display("SELECT ARR SWAPS " + std::to_string(selectSortSwaps), 1);
+  display(
+      "Both algorithms successfully sorted an array of 20 random numbers in "
+      "ascending order.",
+      1);
+  display("INSERT ARR swaps: " + std::to_string(insertSortSwaps), 1);
+  display("SELECT ARR swaps: " + std::to_string(selectSortSwaps), 1);
 }
 
 void display(String output, bool returnFlag) {
@@ -52,21 +51,9 @@ int* popTestArr(int* arr, int size) {
   return arr;
 }
 
-int bubbleSort(int* arr, int arrSize) {
-  int count = 0;
-  for (int i = 0; i < arrSize - 1; i++) {
-    for (int j = 0; j < arrSize - i - 1; j++) {
-      if (arr[j] > arr[j + 1]) {
-        std::swap(arr[j], arr[j + 1]);
-        count++;
-      }
-    }
-  }
-  return count;
-}
-
 int selectSort(int* arr, int arrSize) {
-  int count = 0;
+  int swapCount = 0;
+
   for (int i = 0; i < arrSize - 1; i++) {
     int minIndex = i;
     for (int j = i + 1; j < arrSize; j++) {
@@ -75,23 +62,24 @@ int selectSort(int* arr, int arrSize) {
 
     if (minIndex != i) {
       std::swap(arr[minIndex], arr[i]);
-      count++;
+      swapCount++;
     }
   }
-  return count;
+  return swapCount;
 }
 
 int insertSort(int* arr, int arrSize) {
-  int count = 0;
+  int swapCount = 0;
+
   for (int i = 0; i < arrSize; i++) {
     int key = arr[i];
-    int currentEl = i - 1;
-    while (currentEl >= 0 && arr[currentEl] > key) {
-      arr[currentEl + 1] = arr[currentEl];
-      currentEl = currentEl - 1;
+    int currentIndex = i - 1;
+
+    while (currentIndex >= 0 && arr[currentIndex] > key) {
+      std::swap(arr[currentIndex], arr[currentIndex + 1]);
+      swapCount++;
+      currentIndex -= 1;
     }
-    arr[currentEl + 1] = key;
-    count++;
   }
-  return count;
+  return swapCount;
 }
