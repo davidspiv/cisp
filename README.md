@@ -1,3 +1,6 @@
+## Sum of Numbers
+Assume that a file containing a series of integers is named numbers.dat and exists on the computer’s disk. Write C++  program that reads all of the numbers stored in the file and calculates their total. *hint*: To run the program, numbers.dat not exist ... you have to create it and save integer numbers in it, after this step you can read the numbers.
+
 ## Payroll Program with Input Validation
 Write C++ payroll program that prompts the user to enter an employee’s hourly pay rate and the number of hours worked. Validate the user’s input so that only pay rates in the range of $7.50 through $18.25 and hours in the range of 0 through 40 are accepted. The program should display the employee’s gross pay.
 
