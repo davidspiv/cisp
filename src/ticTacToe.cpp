@@ -3,7 +3,7 @@
 
 using String = std::string;
 
-struct Square {
+struct Tile {
   int row;
   int col;
 };
@@ -32,93 +32,96 @@ int getInput(int minVal, int maxVal) {
 
 void displayBoard(char boardArr[3][3]) {
   for (int i = 0; i < 3; i++) {
-    display("     /     /     ", true);
+    const String topSlice = "     /     /     ";
+    const String bottomSlice = (i == 2) ? topSlice : "_____/_____/_____";
+    String middleSlice = "";
     for (int j = 0; j < 3; j++) {
-      String lineSegment = "  ";
-      lineSegment += boardArr[i][j];
+      middleSlice += boardArr[i][j] ? "  " + String({boardArr[i][j]}) : "   ";
       if (j < 2) {
-        lineSegment += "  /";
-      } else {
-        lineSegment += "  \n";
-      }
-      display(lineSegment);
-      if (boardArr[i][j] == ' ') {
+        middleSlice += "  /";
       }
     }
-    if (i < 2) {
-      display("_____/_____/_____", true);
-    } else {
-      display("     /     /     ", true);
-    }
+
+    display(topSlice, true);
+    display(middleSlice, true);
+    display(bottomSlice, true);
   }
 }
 
-Square getSquare() {
+Tile getTile() {
   display("row: ");
-  int playerRow = getInput(1, 3) - 1;
+  const int playerRow = getInput(1, 3);
   display("col: ");
-  int playerCol = getInput(1, 3) - 1;
-  Square newSquare = {playerRow, playerCol};
-  return newSquare;
+  const int playerCol = getInput(1, 3);
+  Tile newTile = {playerRow - 1, playerCol - 1};
+  return newTile;
 }
 
-bool playerMove(char boardArr[3][3], char player) {
-  Square playerSquare;
+Tile playerMove(char boardArr[3][3], char player) {
+  Tile playerTile;
   display("Player " + String(1, player) + "'s turn to move.", true);
-  playerSquare = getSquare();
-  while (boardArr[playerSquare.row][playerSquare.col] != ' ') {
-    display("Square already occupied, try again.", true);
-    playerSquare = getSquare();
+  playerTile = getTile();
+  while (boardArr[playerTile.row][playerTile.col] != 0) {
+    display("Tile already occupied, try again.", true);
+    playerTile = getTile();
   }
-  boardArr[playerSquare.row][playerSquare.col] = player;
-  displayBoard(boardArr);
 
+  boardArr[playerTile.row][playerTile.col] = player;
+  return playerTile;
+}
+
+bool isWinningMove(char boardArr[3][3], Tile tile) {
+  const char player = boardArr[tile.row][tile.col];
   String rowCheck = "";
   String colCheck = "";
   String diagCheck1 = "";
   String diagCheck2 = "";
-  String winCode = String(1, player) + String(1, player) + String(1, player);
+  String winCode = {player, player, player};
+  bool diagCheckRequired = (tile.row + tile.col) % 2 == 0;
 
+  // change to do while??
   for (int i = 0; i < 3; i++) {
-    rowCheck += boardArr[playerSquare.row][i];
-    colCheck += boardArr[i][playerSquare.col];
-    diagCheck1 += boardArr[i][i];
-    diagCheck2 += boardArr[i][2 - i];
+    rowCheck += boardArr[tile.row][i];
+    colCheck += boardArr[i][tile.col];
+    if (diagCheckRequired) {
+      diagCheck1 += boardArr[i][i];
+      diagCheck2 += boardArr[i][2 - i];
+    }
   }
 
   if (rowCheck == winCode || colCheck == winCode || diagCheck1 == winCode ||
       diagCheck2 == winCode) {
-    display("Player " + String(1, player) + " wins!!", true);
     return true;
   }
   return false;
 }
 
 int main() {
-  char board[3][3];
-  bool isGameEnd = false;
-  while (!isGameEnd) {
-    for (int i = 0; i < 3; i++) {
-      for (int j = 0; j < 3; j++) {
-        board[i][j] = ' ';
-      }
-    }
+  bool isProgramEnd = false;
+  while (!isProgramEnd) {
+    char board[3][3] = {{}};
+
     displayBoard(board);
+
     for (int i = 0; i < 9; i++) {
-      if (i % 2) {
-        isGameEnd = playerMove(board, 'X');
-      } else {
-        isGameEnd = playerMove(board, 'O');
-      }
-      if (isGameEnd) {
+      const char player = i % 2 ? 'X' : 'O';
+      const Tile lastPlayedTile = playerMove(board, player);
+
+      displayBoard(board);
+
+      if (isWinningMove(board, lastPlayedTile)) {
+        display("Game over: Player " + String({player}) + " wins!!", true);
         break;
+      }
+      if (i == 8) {
+        display("Game over: Tie!!", true);
       }
     }
 
     display("Would you like to play another game? 0 = no, 1 = yes", true);
     int input = getInput(0, 1);
-    if (input) {
-      isGameEnd = false;
+    if (!input) {
+      isProgramEnd = true;
     }
   }
   display("Program exited successfully", 1);
