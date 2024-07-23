@@ -1,3 +1,21 @@
+## Tic-Tac-Toe
+
+Using the below points, write a pseudocode for Tic Tac Toe game.
+
+1. Create a 3x3 game board: You can represent the Tic Tac Toe board as a 3x3 matrix, where each cell represents a spot on the board. You can use a nested array or vector in C++ to create the game board.
+
+2. Define the players: You will need to define the players who will be playing the game, such as player X and player O. You can use the variables 'X' and 'O' to represent the two players.
+
+3. Display the game board: You will need to display the game board after each move, so that the players can see the current state of the game. You can use a loop to iterate through the rows and columns of the game board and print out the contents of each cell.
+
+4. Get player input: You will need to get input from the players to make their moves. You can prompt the player to enter a row and column number to place their symbol on the game board.
+
+5. Check for a winner: After each move, you will need to check whether a player has won the game. You can do this by checking if any row, column, or diagonal contains all the same symbols.
+
+6. End the game: The game ends when a player wins or the game board is full and no more moves can be made.
+
+7. Implement a restart option: Once the game is over, you can ask the players if they want to play again. If they choose to play again, you can reset the game board and start the game from the beginning.
+
 ## Sum of Numbers
 Assume that a file containing a series of integers is named numbers.dat and exists on the computer’s disk. Write C++  program that reads all of the numbers stored in the file and calculates their total. *hint*: To run the program, numbers.dat not exist ... you have to create it and save integer numbers in it, after this step you can read the numbers.
 
