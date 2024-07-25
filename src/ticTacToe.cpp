@@ -1,9 +1,7 @@
 #include <iostream>
 #include <string>
-#include <vector>
 
 using String = std::string;
-using Vector = std::vector<char>;
 
 struct Cord {
   int row;
@@ -25,18 +23,18 @@ void displayBoard(char boardArr[3][3]) {
     const String topSlice = "     /     /     ";
     const String bottomSlice = (rowCount != 2) ? "_____/_____/_____" : topSlice;
 
-    Vector middleSlice;
+    String middleSlice;
 
     for (int colCount = 0; colCount < 3; colCount++) {
       const char cordVal = boardArr[rowCount][colCount];
       if (cordVal) {
-        middleSlice.insert(middleSlice.end(), {' ', ' ', cordVal});
+        middleSlice.append({' ', ' ', cordVal});
       } else {
-        middleSlice.insert(middleSlice.end(), {' ', ' ', ' '});
+        middleSlice.append({' ', ' ', ' '});
       }
 
       if (colCount < 2) {
-        middleSlice.insert(middleSlice.end(), {' ', ' ', '/'});
+        middleSlice.append({' ', ' ', '/'});
       }
     }
     String str(middleSlice.begin(), middleSlice.end());
