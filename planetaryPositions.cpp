@@ -27,7 +27,7 @@ struct EclipticComponents {
   double radiusVector;
 };
 
-const int year = 2024;
+const int year = 2000;
 const int month = 9;
 const int date = 2;
 
@@ -288,6 +288,6 @@ int main() {
 
     const double rg = sqrt(xe * xe + ye * ye + ze * ze);
 
-    std::cout << "distance in AU " << rg << std::endl;
+    std::cout << eclipticComponents[i].name << " : " << rg << std::endl;
   }
 }
