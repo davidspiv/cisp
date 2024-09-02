@@ -24,14 +24,21 @@ void displayBoard(char boardArr[3][3]) {
     const String bottomSlice = (rowCount != 2) ? "_____/_____/_____" : topSlice;
 
     String middleSlice;
+    String middleSlice;
 
     for (int colCount = 0; colCount < 3; colCount++) {
       const char cordVal = boardArr[rowCount][colCount];
       const char insertVal = cordVal ? cordVal : ' ';
 
       middleSlice.append({' ', ' ', insertVal});
+      if (cordVal) {
+        middleSlice.append({' ', ' ', cordVal});
+      } else {
+        middleSlice.append({' ', ' ', ' '});
+      }
 
       if (colCount < 2) {
+        middleSlice.append({' ', ' ', '/'});
         middleSlice.append({' ', ' ', '/'});
       }
     }
