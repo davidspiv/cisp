@@ -1,4 +1,5 @@
 // https://stjarnhimlen.se/comp/ppcomp.html#5a
+// http://www.stargazing.net/kepler/ellipse.html
 
 #include <cmath>
 #include <iostream>
@@ -13,20 +14,37 @@ struct CelestialBody {
   double meanAnomaly;
 };
 
+struct SunVector {
+  float xs;
+  float ys;
+};
+
 const int year = 2024;
 const int month = 9;
-const int date = 21;
-
-const double dayNumber = 367 * year - 7 * (year + (month + 9) / 12) / 4 -
-                         3 * ((year + (month - 9) / 7) / 100 + 1) / 4 +
-                         275 * month / 9 + date - 730515;
+const int date = 2;
 
 const double milePerAstronomicalUnit = 9.296e-7;
 
-double toRadians(double degrees) { return degrees * (M_PI / 180); }
+// Days from 1/1/2000
+double dayNumber = 367 * year - 7 * (year + (month + 9) / 12) / 4 -
+                   3 * ((year + (month - 9) / 7) / 100 + 1) / 4 +
+                   275 * month / 9 + date - 730515;
 
-double getDistanceAsMilesFromSun() {
+// the "tilt" of the Earth's axis of rotation
+const double eclipticObliquity = 23.4393 - 3.563E-7 * dayNumber;
+
+// convert to scalar between 0 and 360 inclusive.
+double toAngle(double scalar) {
+  float degree = fmod(scalar, 360);
+  if (degree < 0) {
+    degree += 360;
+  }
+  return degree;
+}
+
+SunVector getPositionOfSun() {
   CelestialBody sun;
+  SunVector sunVector;
 
   sun.longitudeOfAscendingNode = 0.0;
   sun.planeOfEarthsOrbit = 0.0;
@@ -35,13 +53,7 @@ double getDistanceAsMilesFromSun() {
   sun.eccentricity = 0.016709 - 1.151E-9 * dayNumber;
   sun.meanAnomaly = 356.0470 + 0.9856002585 * dayNumber;
 
-  while (sun.meanAnomaly > 360) {
-    sun.meanAnomaly -= 360;
-  }
-
-  while (sun.meanAnomaly < 0) {
-    sun.meanAnomaly += 360;
-  };
+  sun.meanAnomaly = toAngle(sun.meanAnomaly);
 
   const double eccentricAnomaly =
       sun.meanAnomaly + sun.eccentricity * (180 / M_PI) * sin(sun.meanAnomaly) *
@@ -51,10 +63,87 @@ double getDistanceAsMilesFromSun() {
   const double yAnomaly =
       sqrt(1.0 - sun.eccentricity * sun.eccentricity) * sin(eccentricAnomaly);
 
+  const double trueAnomaly = atan2(yAnomaly, xAnomaly);
   const double distanceAsAU = sqrt(xAnomaly * xAnomaly + yAnomaly * yAnomaly);
-  const double distanceAsMiles = distanceAsAU * milePerAstronomicalUnit;
 
-  return distanceAsMiles;
+  const double lonsun = trueAnomaly + sun.argumentOfPerihelion;
+  sunVector.xs = distanceAsAU * cos(lonsun);
+  sunVector.ys = distanceAsAU * sin(lonsun);
+
+  return sunVector;
+}
+
+float getPosition(const CelestialBody &body) {
+  float eccentricAnomaly =
+      body.meanAnomaly + body.eccentricity * (180 / M_PI) *
+                             sin(body.meanAnomaly) *
+                             (1.0 + body.eccentricity * cos(body.meanAnomaly));
+
+  if (body.eccentricity > 0.05) {
+    float E1 = 0;
+    float E0 = 0;
+
+    do {
+      if (E1 == 0) {
+        E0 = eccentricAnomaly;
+      } else {
+        E0 = E1;
+      }
+
+      E1 = E0 - (E0 - body.eccentricity * (180 / M_PI) * sin(E0) -
+                 body.meanAnomaly) /
+                    (1 - body.eccentricity * cos(E0));
+
+      // std::cout << "E0: " << E0 << " AND E1: " << E1 << std::endl;
+    } while (std::abs(E1 - E0) > 0.1);
+
+    eccentricAnomaly = E1;
+  }
+
+  const float xv =
+      body.meanDistanceFromSun * (cos(eccentricAnomaly) - body.eccentricity);
+
+  const float yv = body.meanDistanceFromSun *
+                   sqrt(1.0 - body.eccentricity * body.eccentricity) *
+                   sin(eccentricAnomaly);
+
+  const float trueAnomaly = atan2(yv, xv);
+  const float radiusVector = sqrt(xv * xv + yv * yv);
+
+  const float xh =
+      radiusVector * (cos(body.longitudeOfAscendingNode) *
+                          cos(trueAnomaly + body.argumentOfPerihelion) -
+                      sin(body.longitudeOfAscendingNode) *
+                          sin(trueAnomaly + body.argumentOfPerihelion) *
+                          cos(body.planeOfEarthsOrbit));
+  const float yh =
+      radiusVector * (sin(body.longitudeOfAscendingNode) *
+                          cos(trueAnomaly + body.argumentOfPerihelion) +
+                      cos(body.longitudeOfAscendingNode) *
+                          sin(trueAnomaly + body.argumentOfPerihelion) *
+                          cos(body.planeOfEarthsOrbit));
+  const float zh =
+      radiusVector * (sin(trueAnomaly + body.argumentOfPerihelion) *
+                      sin(body.planeOfEarthsOrbit));
+
+  SunVector sunVector = getPositionOfSun();
+
+  const float xg = xh + sunVector.xs;
+  const float yg = yh + sunVector.ys;
+  const float zg = zh;
+
+  const float xe = xg;
+  const float ye = yg * cos(eclipticObliquity) - zg * sin(eclipticObliquity);
+  const float ze = yg * sin(eclipticObliquity) + zg * cos(eclipticObliquity);
+
+  const float ra = atan2(ye, xe);
+  const float dec = atan2(ze, sqrt(xe * xe + ye * ye));
+
+  const float rg = sqrt(xe * xe + ye * ye + ze * ze);
+
+  std::cout << "distance in AU " << rg << std::endl;
+
+  return radiusVector;
 }
 
 int main() {
@@ -65,9 +154,6 @@ int main() {
   CelestialBody saturn;
   CelestialBody uranus;
   CelestialBody neptune;
-
-  const float distanceSun = getDistanceAsMilesFromSun();
-  std::cout << "getDistanceAsMilesFromSun: " << distanceSun << std::endl;
 
   mercury.longitudeOfAscendingNode = 48.3313 + 3.24587E-5 * dayNumber;
   mercury.planeOfEarthsOrbit = 7.0047 + 5.00E-8 * dayNumber;
@@ -118,8 +204,10 @@ int main() {
   neptune.eccentricity = 0.008606 + 2.15E-9 * dayNumber;
   neptune.meanAnomaly = 260.2471 + 0.005995147 * dayNumber;
 
-  CelestialBody celestialBody[] = {mercury, venus,  mars,   jupiter,
-                                   saturn,  uranus, neptune};
-
-  //    std::cout << dayNumber << std::endl;
+  CelestialBody celestialBody[7] = {mercury, venus,  mars,   jupiter,
+                                    saturn,  uranus, neptune};
+  // getPosition(celestialBody[0]);
+  for (size_t i = 0; i < 7; i++) {
+    getPosition(celestialBody[i]);
+  }
 }
