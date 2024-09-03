@@ -8,9 +8,9 @@
 struct CelestialBody {
   std::string name;
   double longitudeOfAscendingNode;
-  double planeOfEarthsOrbit;
+  double orbitalInclination;
   double argumentOfPerihelion;
-  double meanDistanceFromSun;
+  double semimajorAxis;
   double eccentricity;
   double meanAnomaly;
 };
@@ -27,19 +27,28 @@ struct EclipticComponents {
   double radiusVector;
 };
 
-const int year = 2000;
-const int month = 9;
-const int date = 2;
-
 const double milePerAstronomicalUnit = 9.296e-7;
 
 // Days from 1/1/2000
-double dayNumber = 367 * year - 7 * (year + (month + 9) / 12) / 4 -
+double getDayNum() {
+  const int year = 2024;
+  const int month = 9;
+  const int day = 2;
+  const double universalTime = 0.0;
+
+  double totDays = 367 * year - 7 * (year + (month + 9) / 12) / 4 -
                    3 * ((year + (month - 9) / 7) / 100 + 1) / 4 +
-                   275 * month / 9 + date - 730515;
+                   275 * month / 9 + day - 730515;
+
+  totDays += universalTime / 24.0;
+
+  return totDays;
+}
+
+const double dayNum = getDayNum();
 
 // the "tilt" of the Earth's axis of rotation
-const double eclipticObliquity = 23.4393 - 3.563E-7 * dayNumber;
+const double eclipticObliquity = 23.4393 - 3.563E-7 * dayNum;
 
 // convert to scalar between 0 and 360 inclusive.
 double toAngle(double scalar) {
@@ -50,13 +59,14 @@ double toAngle(double scalar) {
   return degree;
 }
 
-SunVector getPositionOfSun() {
+// Geocentric coordinates of the sun
+SunVector getSunVector() {
   SunVector sunVector;
 
-  const float argumentOfPerihelion = 282.9404 + 4.70935E-5 * dayNumber;
-  const float eccentricity = 0.016709 - 1.151E-9 * dayNumber;
+  const double argumentOfPerihelion = 282.9404 + 4.70935E-5 * dayNum;
+  const double eccentricity = 0.016709 - 1.151E-9 * dayNum;
 
-  const float meanAnomaly = toAngle(356.0470 + 0.9856002585 * dayNumber);
+  const double meanAnomaly = toAngle(356.0470 + 0.9856002585 * dayNum);
 
   const double eccentricAnomaly =
       meanAnomaly + eccentricity * (180 / M_PI) * sin(meanAnomaly) *
@@ -77,41 +87,48 @@ SunVector getPositionOfSun() {
   return sunVector;
 }
 
-EclipticComponents getPosition(CelestialBody &body) {
+EclipticComponents getEclipticComponents(CelestialBody &body) {
+  body.meanAnomaly = toAngle(body.meanAnomaly);
+
   double eccentricAnomaly =
       body.meanAnomaly + body.eccentricity * (180 / M_PI) *
                              sin(body.meanAnomaly) *
                              (1.0 + body.eccentricity * cos(body.meanAnomaly));
 
   if (body.eccentricity > 0.05) {
-    double E1 = 0.00;
-    double E0 = 0.00;
-
+    int count = 0;
+    double difference;
+    double E0 = eccentricAnomaly;
+    double E1;
     do {
-      if (E1 == 0) {
-        E0 = eccentricAnomaly;
-      } else {
-        E0 = E1;
-      }
-
+      if (count > 10) {
+        std::cout << body.name << " not converging" << std::endl;
+        break;
+      };
       E1 = E0 - (E0 - body.eccentricity * (180 / M_PI) * sin(E0) -
                  body.meanAnomaly) /
                     (1 - body.eccentricity * cos(E0));
 
-      // std::cout << "E0: " << E0 << " AND E1: " << E1 << std::endl;
-    } while (std::abs(E1 - E0) > 0.1);
+      difference = std::abs(E1 - eccentricAnomaly);
+      count++;
+      E0 = E1;
 
-    eccentricAnomaly = E1;
+    } while (difference > 0.001);
+
+    if (difference <= 0.001) {
+      eccentricAnomaly = E1;
+    }
   }
 
   const double xv =
-      body.meanDistanceFromSun * (cos(eccentricAnomaly) - body.eccentricity);
+      body.semimajorAxis * (cos(eccentricAnomaly) - body.eccentricity);
 
-  const double yv = body.meanDistanceFromSun *
+  const double yv = body.semimajorAxis *
                     sqrt(1.0 - body.eccentricity * body.eccentricity) *
                     sin(eccentricAnomaly);
 
   const double trueAnomaly = atan2(yv, xv);
+
   const double radiusVector = sqrt(xv * xv + yv * yv);
 
   const double xh =
@@ -119,16 +136,16 @@ EclipticComponents getPosition(CelestialBody &body) {
                           cos(trueAnomaly + body.argumentOfPerihelion) -
                       sin(body.longitudeOfAscendingNode) *
                           sin(trueAnomaly + body.argumentOfPerihelion) *
-                          cos(body.planeOfEarthsOrbit));
+                          cos(body.orbitalInclination));
   const double yh =
       radiusVector * (sin(body.longitudeOfAscendingNode) *
                           cos(trueAnomaly + body.argumentOfPerihelion) +
                       cos(body.longitudeOfAscendingNode) *
                           sin(trueAnomaly + body.argumentOfPerihelion) *
-                          cos(body.planeOfEarthsOrbit));
+                          cos(body.orbitalInclination));
   const double zh =
       radiusVector * (sin(trueAnomaly + body.argumentOfPerihelion) *
-                      sin(body.planeOfEarthsOrbit));
+                      sin(body.orbitalInclination));
 
   EclipticComponents eclipticComponents;
   eclipticComponents.name = body.name;
@@ -149,78 +166,79 @@ int main() {
   CelestialBody neptune;
 
   mercury.name = "mercury";
-  mercury.longitudeOfAscendingNode = 48.3313 + 3.24587E-5 * dayNumber;
-  mercury.planeOfEarthsOrbit = 7.0047 + 5.00E-8 * dayNumber;
-  mercury.argumentOfPerihelion = 29.1241 + 1.01444E-5 * dayNumber;
-  mercury.meanDistanceFromSun = 0.387098;
-  mercury.eccentricity = 0.205635 + 5.59E-10 * dayNumber;
-  mercury.meanAnomaly = 168.6562 + 4.0923344368 * dayNumber;
+  mercury.longitudeOfAscendingNode = 48.3313 + 3.24587E-5 * dayNum;
+  mercury.orbitalInclination = 7.0047 + 5.00E-8 * dayNum;
+  mercury.argumentOfPerihelion = 29.1241 + 1.01444E-5 * dayNum;
+  mercury.semimajorAxis = 0.387098;
+  mercury.eccentricity = 0.205635 + 5.59E-10 * dayNum;
+  mercury.meanAnomaly = 168.6562 + 4.0923344368 * dayNum;
 
   venus.name = "venus";
-  venus.longitudeOfAscendingNode = 76.6799 + 2.46590E-5 * dayNumber;
-  venus.planeOfEarthsOrbit = 3.3946 + 2.75E-8 * dayNumber;
-  venus.argumentOfPerihelion = 54.8910 + 1.38374E-5 * dayNumber;
-  venus.meanDistanceFromSun = 0.723330;
-  venus.eccentricity = 0.006773 - 1.302E-9 * dayNumber;
-  venus.meanAnomaly = 48.0052 + 1.6021302244 * dayNumber;
+  venus.longitudeOfAscendingNode = 76.6799 + 2.46590E-5 * dayNum;
+  venus.orbitalInclination = 3.3946 + 2.75E-8 * dayNum;
+  venus.argumentOfPerihelion = 54.8910 + 1.38374E-5 * dayNum;
+  venus.semimajorAxis = 0.723330;
+  venus.eccentricity = 0.006773 - 1.302E-9 * dayNum;
+  venus.meanAnomaly = 48.0052 + 1.6021302244 * dayNum;
 
   mars.name = "mars";
-  mars.longitudeOfAscendingNode = 49.5574 + 2.11081E-5 * dayNumber;
-  mars.planeOfEarthsOrbit = 1.8497 - 1.78E-8 * dayNumber;
-  mars.argumentOfPerihelion = 286.5016 + 2.92961E-5 * dayNumber;
-  mars.meanDistanceFromSun = 1.523688;
-  mars.eccentricity = 0.093405 + 2.516E-9 * dayNumber;
-  mars.meanAnomaly = 18.6021 + 0.5240207766 * dayNumber;
+  mars.longitudeOfAscendingNode = 49.5574 + 2.11081E-5 * dayNum;
+  mars.orbitalInclination = 1.8497 - 1.78E-8 * dayNum;
+  mars.argumentOfPerihelion = 286.5016 + 2.92961E-5 * dayNum;
+  mars.semimajorAxis = 1.523688;
+  mars.eccentricity = 0.093405 + 2.516E-9 * dayNum;
+  mars.meanAnomaly = 18.6021 + 0.5240207766 * dayNum;
 
   jupiter.name = "jupiter";
-  jupiter.longitudeOfAscendingNode = 100.4542 + 2.76854E-5 * dayNumber;
-  jupiter.planeOfEarthsOrbit = 1.3030 - 1.557E-7 * dayNumber;
-  jupiter.argumentOfPerihelion = 273.8777 + 1.64505E-5 * dayNumber;
-  jupiter.meanDistanceFromSun = 5.20256;
-  jupiter.eccentricity = 0.048498 + 4.469E-9 * dayNumber;
-  jupiter.meanAnomaly = 19.8950 + 0.0830853001 * dayNumber;
+  jupiter.longitudeOfAscendingNode = 100.4542 + 2.76854E-5 * dayNum;
+  jupiter.orbitalInclination = 1.3030 - 1.557E-7 * dayNum;
+  jupiter.argumentOfPerihelion = 273.8777 + 1.64505E-5 * dayNum;
+  jupiter.semimajorAxis = 5.20256;
+  jupiter.eccentricity = 0.048498 + 4.469E-9 * dayNum;
+  jupiter.meanAnomaly = 19.8950 + 0.0830853001 * dayNum;
 
   saturn.name = "saturn";
-  saturn.longitudeOfAscendingNode = 113.6634 + 2.38980E-5 * dayNumber;
-  saturn.planeOfEarthsOrbit = 2.4886 - 1.081E-7 * dayNumber;
-  saturn.argumentOfPerihelion = 339.3939 + 2.97661E-5 * dayNumber;
-  saturn.meanDistanceFromSun = 9.55475;
-  saturn.eccentricity = 0.055546 - 9.499E-9 * dayNumber;
-  saturn.meanAnomaly = 316.9670 + 0.0334442282 * dayNumber;
+  saturn.longitudeOfAscendingNode = 113.6634 + 2.38980E-5 * dayNum;
+  saturn.orbitalInclination = 2.4886 - 1.081E-7 * dayNum;
+  saturn.argumentOfPerihelion = 339.3939 + 2.97661E-5 * dayNum;
+  saturn.semimajorAxis = 9.55475;
+  saturn.eccentricity = 0.055546 - 9.499E-9 * dayNum;
+  saturn.meanAnomaly = 316.9670 + 0.0334442282 * dayNum;
 
   uranus.name = "uranus";
-  uranus.longitudeOfAscendingNode = 74.0005 + 1.3978E-5 * dayNumber;
-  uranus.planeOfEarthsOrbit = 0.7733 + 1.9E-8 * dayNumber;
-  uranus.argumentOfPerihelion = 96.6612 + 3.0565E-5 * dayNumber;
-  uranus.meanDistanceFromSun = 19.18171 - 1.55E-8 * dayNumber;
-  uranus.eccentricity = 0.047318 + 7.45E-9 * dayNumber;
-  uranus.meanAnomaly = 142.5905 + 0.011725806 * dayNumber;
+  uranus.longitudeOfAscendingNode = 74.0005 + 1.3978E-5 * dayNum;
+  uranus.orbitalInclination = 0.7733 + 1.9E-8 * dayNum;
+  uranus.argumentOfPerihelion = 96.6612 + 3.0565E-5 * dayNum;
+  uranus.semimajorAxis = 19.18171 - 1.55E-8 * dayNum;
+  uranus.eccentricity = 0.047318 + 7.45E-9 * dayNum;
+  uranus.meanAnomaly = 142.5905 + 0.011725806 * dayNum;
 
   neptune.name = "neptune";
-  neptune.longitudeOfAscendingNode = 131.7806 + 3.0173E-5 * dayNumber;
-  neptune.planeOfEarthsOrbit = 1.7700 - 2.55E-7 * dayNumber;
-  neptune.argumentOfPerihelion = 272.8461 - 6.027E-6 * dayNumber;
-  neptune.meanDistanceFromSun = 30.05826 + 3.313E-8 * dayNumber;
-  neptune.eccentricity = 0.008606 + 2.15E-9 * dayNumber;
-  neptune.meanAnomaly = 260.2471 + 0.005995147 * dayNumber;
+  neptune.longitudeOfAscendingNode = 131.7806 + 3.0173E-5 * dayNum;
+  neptune.orbitalInclination = 1.7700 - 2.55E-7 * dayNum;
+  neptune.argumentOfPerihelion = 272.8461 - 6.027E-6 * dayNum;
+  neptune.semimajorAxis = 30.05826 + 3.313E-8 * dayNum;
+  neptune.eccentricity = 0.008606 + 2.15E-9 * dayNum;
+  neptune.meanAnomaly = 260.2471 + 0.005995147 * dayNum;
 
   CelestialBody celestialBody[7] = {mercury, venus,  mars,   jupiter,
                                     saturn,  uranus, neptune};
 
-  SunVector sunVector = getPositionOfSun();
+  SunVector sunVector = getSunVector();
   EclipticComponents eclipticComponents[7];
 
-  float Mj;
-  float Ms;
-  float Mu;
+  double Mj;
+  double Ms;
+  double Mu;
 
   // The position in space
-  for (size_t i = 0; i < 7; i++) {
-    eclipticComponents[i] = getPosition(celestialBody[i]);
+  for (size_t i = 1; i < 7; i++) {
+    eclipticComponents[i] = getEclipticComponents(celestialBody[i]);
+
     if (celestialBody[i].name == "jupiter") {
       Mj = celestialBody[i].meanAnomaly;
     }
-    if (celestialBody[i].name == "suturn") {
+    if (celestialBody[i].name == "saturn") {
       Ms = celestialBody[i].meanAnomaly;
     }
     if (celestialBody[i].name == "uranus") {
@@ -229,7 +247,7 @@ int main() {
   }
 
   // Perturbations of Jupiter, Saturn and Uranus
-  for (size_t i = 0; i < 7; i++) {
+  for (size_t i = 1; i < 7; i++) {
     if (eclipticComponents[i].name == "jupiter") {
       eclipticComponents[i].longitudeEclipse -=
           0.332 * sin(2 * Mj - 5 * Ms - 67.6);
@@ -244,20 +262,22 @@ int main() {
       eclipticComponents[i].longitudeEclipse -= 0.016 * sin(Mj - 5 * Ms - 69);
     }
 
-    if (eclipticComponents[i].name == "saturn") {
-      eclipticComponents[i].longitudeEclipse +=
-          0.812 * sin(2 * Mj - 5 * Ms - 67.6);
-      eclipticComponents[i].longitudeEclipse -=
-          0.229 * cos(2 * Mj - 4 * Ms - 2);
-      eclipticComponents[i].longitudeEclipse += 0.119 * sin(Mj - 2 * Ms - 3);
-      eclipticComponents[i].longitudeEclipse +=
-          0.046 * sin(2 * Mj - 6 * Ms - 69);
-      eclipticComponents[i].longitudeEclipse += 0.014 * sin(Mj - 3 * Ms + 32);
+    // makes saturn result worse?
+    //  if (eclipticComponents[i].name == "saturn") {
+    //    eclipticComponents[i].longitudeEclipse +=
+    //        0.812 * sin(2 * Mj - 5 * Ms - 67.6);
+    //    eclipticComponents[i].longitudeEclipse -=
+    //        0.229 * cos(2 * Mj - 4 * Ms - 2);
+    //    eclipticComponents[i].longitudeEclipse += 0.119 * sin(Mj - 2 * Ms -
+    //    3); eclipticComponents[i].longitudeEclipse +=
+    //        0.046 * sin(2 * Mj - 6 * Ms - 69);
+    //    eclipticComponents[i].longitudeEclipse += 0.014 * sin(Mj - 3 * Ms +
+    //    32);
 
-      eclipticComponents[i].latitudeEclipse -= 0.020 * cos(2 * Mj - 4 * Ms - 2);
-      eclipticComponents[i].latitudeEclipse +=
-          0.018 * sin(2 * Mj - 6 * Ms - 49);
-    }
+    //   eclipticComponents[i].latitudeEclipse -= 0.020 * cos(2 * Mj - 4 * Ms -
+    //   2); eclipticComponents[i].latitudeEclipse +=
+    //       0.018 * sin(2 * Mj - 6 * Ms - 49);
+    // }
 
     if (eclipticComponents[i].name == "uranus") {
       eclipticComponents[i].longitudeEclipse += 0.040 * sin(Ms - 2 * Mu + 6);
@@ -267,7 +287,7 @@ int main() {
   }
 
   // Geocentric (Earth-centered) coordinates
-  for (size_t i = 0; i < 7; i++) {
+  for (size_t i = 1; i < 7; i++) {
     const double xh = eclipticComponents[i].radiusVector *
                       cos(eclipticComponents[i].longitudeEclipse) *
                       cos(eclipticComponents[i].latitudeEclipse);
@@ -288,6 +308,6 @@ int main() {
 
     const double rg = sqrt(xe * xe + ye * ye + ze * ze);
 
-    std::cout << eclipticComponents[i].name << " : " << rg << std::endl;
+    std::cout << eclipticComponents[i].name << ": " << rg << std::endl;
   }
 }
