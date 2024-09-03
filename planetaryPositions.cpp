@@ -27,11 +27,11 @@ struct EclipticComponents {
   double radiusVector;
 };
 
-const double milePerAstronomicalUnit = 9.296e-7;
+// const double milePerAstronomicalUnit = 9.296e-7;
 
 // Days from 1/1/2000
 double getDayNum() {
-  const int year = 2024;
+  const int year = 2200;
   const int month = 9;
   const int day = 2;
   const double universalTime = 0.0;
@@ -101,21 +101,23 @@ EclipticComponents getEclipticComponents(CelestialBody &body) {
     double E0 = eccentricAnomaly;
     double E1;
     do {
-      if (count > 10) {
+      if (count > 100) {
         std::cout << body.name << " not converging" << std::endl;
         break;
       };
-      E1 = E0 - (E0 - body.eccentricity * (180 / M_PI) * sin(E0) -
+
+      E1 = E0 - (E0 - body.eccentricity * (180.0 / M_PI) * sin(E0) -
                  body.meanAnomaly) /
                     (1 - body.eccentricity * cos(E0));
 
       difference = std::abs(E1 - eccentricAnomaly);
+      std::cout << "difference: " << difference << std::endl;
       count++;
       E0 = E1;
 
-    } while (difference > 0.001);
+    } while (difference > 0.1);
 
-    if (difference <= 0.001) {
+    if (difference <= 0.1) {
       eccentricAnomaly = E1;
     }
   }
@@ -128,6 +130,8 @@ EclipticComponents getEclipticComponents(CelestialBody &body) {
                     sin(eccentricAnomaly);
 
   const double trueAnomaly = atan2(yv, xv);
+
+  // std::cout << "true anomaly: " << trueAnomaly << std::endl;
 
   const double radiusVector = sqrt(xv * xv + yv * yv);
 
@@ -184,9 +188,9 @@ int main() {
   mars.name = "mars";
   mars.longitudeOfAscendingNode = 49.5574 + 2.11081E-5 * dayNum;
   mars.orbitalInclination = 1.8497 - 1.78E-8 * dayNum;
-  mars.argumentOfPerihelion = 286.5016 + 2.92961E-5 * dayNum;
+  mars.argumentOfPerihelion = 206.650 + 2.92961E-5 * dayNum;
   mars.semimajorAxis = 1.523688;
-  mars.eccentricity = 0.093405 + 2.516E-9 * dayNum;
+  mars.eccentricity = 0.048498 + 4.469E-9 * dayNum;
   mars.meanAnomaly = 18.6021 + 0.5240207766 * dayNum;
 
   jupiter.name = "jupiter";
@@ -231,9 +235,27 @@ int main() {
   double Ms;
   double Mu;
 
+  std::cout << "------------------------------" << std::endl
+            << "[ECLIPTIC COMPONENTS]" << std::endl
+            << std::endl;
   // The position in space
-  for (size_t i = 1; i < 7; i++) {
+  for (size_t i = 0; i < 7; i++) {
     eclipticComponents[i] = getEclipticComponents(celestialBody[i]);
+
+    std::cout << celestialBody[i].name << ": " << std::endl
+              << "longitudeOfAscendingNode: \t"
+              << celestialBody[i].longitudeOfAscendingNode << std::endl
+              << "orbitalInclination: \t\t"
+              << celestialBody[i].orbitalInclination << std::endl
+              << "argumentOfPerihelion: \t\t"
+              << celestialBody[i].argumentOfPerihelion << std::endl
+              << "semimajorAxis: \t\t\t" << celestialBody[i].semimajorAxis
+              << std::endl
+              << "eccentricity: \t\t\t" << celestialBody[i].eccentricity
+              << std::endl
+              << "meanAnomaly: \t\t\t" << celestialBody[i].meanAnomaly
+              << std::endl
+              << std::endl;
 
     if (celestialBody[i].name == "jupiter") {
       Mj = celestialBody[i].meanAnomaly;
@@ -245,9 +267,9 @@ int main() {
       Mu = celestialBody[i].meanAnomaly;
     }
   }
-
+  std::cout << "------------------------------" << std::endl;
   // Perturbations of Jupiter, Saturn and Uranus
-  for (size_t i = 1; i < 7; i++) {
+  for (size_t i = 0; i < 7; i++) {
     if (eclipticComponents[i].name == "jupiter") {
       eclipticComponents[i].longitudeEclipse -=
           0.332 * sin(2 * Mj - 5 * Ms - 67.6);
@@ -262,22 +284,20 @@ int main() {
       eclipticComponents[i].longitudeEclipse -= 0.016 * sin(Mj - 5 * Ms - 69);
     }
 
-    // makes saturn result worse?
-    //  if (eclipticComponents[i].name == "saturn") {
-    //    eclipticComponents[i].longitudeEclipse +=
-    //        0.812 * sin(2 * Mj - 5 * Ms - 67.6);
-    //    eclipticComponents[i].longitudeEclipse -=
-    //        0.229 * cos(2 * Mj - 4 * Ms - 2);
-    //    eclipticComponents[i].longitudeEclipse += 0.119 * sin(Mj - 2 * Ms -
-    //    3); eclipticComponents[i].longitudeEclipse +=
-    //        0.046 * sin(2 * Mj - 6 * Ms - 69);
-    //    eclipticComponents[i].longitudeEclipse += 0.014 * sin(Mj - 3 * Ms +
-    //    32);
+    if (eclipticComponents[i].name == "saturn") {
+      eclipticComponents[i].longitudeEclipse +=
+          0.812 * sin(2 * Mj - 5 * Ms - 67.6);
+      eclipticComponents[i].longitudeEclipse -=
+          0.229 * cos(2 * Mj - 4 * Ms - 2);
+      eclipticComponents[i].longitudeEclipse += 0.119 * sin(Mj - 2 * Ms - 3);
+      eclipticComponents[i].longitudeEclipse +=
+          0.046 * sin(2 * Mj - 6 * Ms - 69);
+      eclipticComponents[i].longitudeEclipse += 0.014 * sin(Mj - 3 * Ms + 32);
 
-    //   eclipticComponents[i].latitudeEclipse -= 0.020 * cos(2 * Mj - 4 * Ms -
-    //   2); eclipticComponents[i].latitudeEclipse +=
-    //       0.018 * sin(2 * Mj - 6 * Ms - 49);
-    // }
+      eclipticComponents[i].latitudeEclipse -= 0.020 * cos(2 * Mj - 4 * Ms - 2);
+      eclipticComponents[i].latitudeEclipse +=
+          0.018 * sin(2 * Mj - 6 * Ms - 49);
+    }
 
     if (eclipticComponents[i].name == "uranus") {
       eclipticComponents[i].longitudeEclipse += 0.040 * sin(Ms - 2 * Mu + 6);
@@ -287,7 +307,11 @@ int main() {
   }
 
   // Geocentric (Earth-centered) coordinates
-  for (size_t i = 1; i < 7; i++) {
+
+  std::cout << "------------------------------" << std::endl
+            << "[DISTANCE TO EARTH IN AU]" << std::endl
+            << std::endl;
+  for (size_t i = 0; i < 7; i++) {
     const double xh = eclipticComponents[i].radiusVector *
                       cos(eclipticComponents[i].longitudeEclipse) *
                       cos(eclipticComponents[i].latitudeEclipse);
@@ -310,4 +334,5 @@ int main() {
 
     std::cout << eclipticComponents[i].name << ": " << rg << std::endl;
   }
+  std::cout << std::endl << "------------------------------" << std::endl;
 }
