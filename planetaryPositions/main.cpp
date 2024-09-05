@@ -1,9 +1,12 @@
 // https://stjarnhimlen.se/comp/ppcomp.html#5a
 // http://www.stargazing.net/kepler/ellipse.html
-
 #include <cmath>
 #include <iostream>
 #include <string>
+
+// 0-7
+size_t indexStart = 2;
+size_t indexEnd = 3;
 
 struct CelestialBody {
   std::string name;
@@ -13,6 +16,7 @@ struct CelestialBody {
   double semimajorAxis;
   double eccentricity;
   double meanAnomaly;
+  double actualDistance;
 };
 
 struct SunVector {
@@ -29,11 +33,10 @@ struct EclipticComponents {
 
 // const double milePerAstronomicalUnit = 9.296e-7;
 
-// Days from 1/1/2000
 double getDayNum() {
-  const int year = 2200;
+  const int year = 2024;
   const int month = 9;
-  const int day = 2;
+  const int day = 4;
   const double universalTime = 0.0;
 
   double totDays = 367 * year - 7 * (year + (month + 9) / 12) / 4 -
@@ -52,11 +55,13 @@ const double eclipticObliquity = 23.4393 - 3.563E-7 * dayNum;
 
 // convert to scalar between 0 and 360 inclusive.
 double toAngle(double scalar) {
-  double degree = fmod(scalar, 360);
-  if (degree < 0) {
-    degree += 360;
+  while (scalar > 360) {
+    scalar -= 360;
   }
-  return degree;
+  while (scalar < 0) {
+    scalar += 360;
+  }
+  return scalar;
 }
 
 // Geocentric coordinates of the sun
@@ -77,6 +82,7 @@ SunVector getSunVector() {
       sqrt(1.0 - eccentricity * eccentricity) * sin(eccentricAnomaly);
 
   const double trueAnomaly = atan2(yAnomaly, xAnomaly);
+  // Should equal 1
   const double distanceAsAU = sqrt(xAnomaly * xAnomaly + yAnomaly * yAnomaly);
 
   const double lonsun = trueAnomaly + argumentOfPerihelion;
@@ -87,7 +93,7 @@ SunVector getSunVector() {
   return sunVector;
 }
 
-EclipticComponents getEclipticComponents(CelestialBody &body) {
+EclipticComponents getEclipticComponents(CelestialBody& body) {
   body.meanAnomaly = toAngle(body.meanAnomaly);
 
   double eccentricAnomaly =
@@ -101,8 +107,9 @@ EclipticComponents getEclipticComponents(CelestialBody &body) {
     double E0 = eccentricAnomaly;
     double E1;
     do {
-      if (count > 100) {
-        std::cout << body.name << " not converging" << std::endl;
+      if (count > 999) {
+        std::cout << body.name << " not converging " << body.eccentricity
+                  << std::endl;
         break;
       };
 
@@ -111,13 +118,12 @@ EclipticComponents getEclipticComponents(CelestialBody &body) {
                     (1 - body.eccentricity * cos(E0));
 
       difference = std::abs(E1 - eccentricAnomaly);
-      std::cout << "difference: " << difference << std::endl;
       count++;
       E0 = E1;
 
     } while (difference > 0.1);
 
-    if (difference <= 0.1) {
+    if (difference <= 0.01) {
       eccentricAnomaly = E1;
     }
   }
@@ -131,7 +137,7 @@ EclipticComponents getEclipticComponents(CelestialBody &body) {
 
   const double trueAnomaly = atan2(yv, xv);
 
-  // std::cout << "true anomaly: " << trueAnomaly << std::endl;
+  std::cout << "true anomaly: " << trueAnomaly << std::endl;
 
   const double radiusVector = sqrt(xv * xv + yv * yv);
 
@@ -160,6 +166,29 @@ EclipticComponents getEclipticComponents(CelestialBody &body) {
   return eclipticComponents;
 }
 
+double getGeocentricVector(const EclipticComponents& components) {
+  SunVector sunVector = getSunVector();
+
+  const double xh = components.radiusVector * cos(components.longitudeEclipse) *
+                    cos(components.latitudeEclipse);
+  const double yh = components.radiusVector * sin(components.longitudeEclipse) *
+                    cos(components.latitudeEclipse);
+  const double zh = components.radiusVector * sin(components.latitudeEclipse);
+
+  const double xg = xh + sunVector.xs;
+  const double yg = yh + sunVector.ys;
+  const double zg = zh;
+
+  // Geocentric distance
+  const double xe = xg;
+  const double ye = yg * cos(eclipticObliquity) - zg * sin(eclipticObliquity);
+  const double ze = yg * sin(eclipticObliquity) + zg * cos(eclipticObliquity);
+
+  const double rg = sqrt(xe * xe + ye * ye + ze * ze);
+
+  return rg;
+};
+
 int main() {
   CelestialBody mercury;
   CelestialBody venus;
@@ -176,6 +205,7 @@ int main() {
   mercury.semimajorAxis = 0.387098;
   mercury.eccentricity = 0.205635 + 5.59E-10 * dayNum;
   mercury.meanAnomaly = 168.6562 + 4.0923344368 * dayNum;
+  mercury.actualDistance = 0.89;
 
   venus.name = "venus";
   venus.longitudeOfAscendingNode = 76.6799 + 2.46590E-5 * dayNum;
@@ -184,6 +214,7 @@ int main() {
   venus.semimajorAxis = 0.723330;
   venus.eccentricity = 0.006773 - 1.302E-9 * dayNum;
   venus.meanAnomaly = 48.0052 + 1.6021302244 * dayNum;
+  venus.actualDistance = 1.50;
 
   mars.name = "mars";
   mars.longitudeOfAscendingNode = 49.5574 + 2.11081E-5 * dayNum;
@@ -192,6 +223,7 @@ int main() {
   mars.semimajorAxis = 1.523688;
   mars.eccentricity = 0.048498 + 4.469E-9 * dayNum;
   mars.meanAnomaly = 18.6021 + 0.5240207766 * dayNum;
+  mars.actualDistance = 1.41;
 
   jupiter.name = "jupiter";
   jupiter.longitudeOfAscendingNode = 100.4542 + 2.76854E-5 * dayNum;
@@ -200,6 +232,7 @@ int main() {
   jupiter.semimajorAxis = 5.20256;
   jupiter.eccentricity = 0.048498 + 4.469E-9 * dayNum;
   jupiter.meanAnomaly = 19.8950 + 0.0830853001 * dayNum;
+  jupiter.actualDistance = 5.08;
 
   saturn.name = "saturn";
   saturn.longitudeOfAscendingNode = 113.6634 + 2.38980E-5 * dayNum;
@@ -208,6 +241,7 @@ int main() {
   saturn.semimajorAxis = 9.55475;
   saturn.eccentricity = 0.055546 - 9.499E-9 * dayNum;
   saturn.meanAnomaly = 316.9670 + 0.0334442282 * dayNum;
+  saturn.actualDistance = 8.66;
 
   uranus.name = "uranus";
   uranus.longitudeOfAscendingNode = 74.0005 + 1.3978E-5 * dayNum;
@@ -216,6 +250,7 @@ int main() {
   uranus.semimajorAxis = 19.18171 - 1.55E-8 * dayNum;
   uranus.eccentricity = 0.047318 + 7.45E-9 * dayNum;
   uranus.meanAnomaly = 142.5905 + 0.011725806 * dayNum;
+  uranus.actualDistance = 19.30;
 
   neptune.name = "neptune";
   neptune.longitudeOfAscendingNode = 131.7806 + 3.0173E-5 * dayNum;
@@ -224,11 +259,11 @@ int main() {
   neptune.semimajorAxis = 30.05826 + 3.313E-8 * dayNum;
   neptune.eccentricity = 0.008606 + 2.15E-9 * dayNum;
   neptune.meanAnomaly = 260.2471 + 0.005995147 * dayNum;
+  neptune.actualDistance = 28.93;
 
   CelestialBody celestialBody[7] = {mercury, venus,  mars,   jupiter,
                                     saturn,  uranus, neptune};
 
-  SunVector sunVector = getSunVector();
   EclipticComponents eclipticComponents[7];
 
   double Mj;
@@ -239,7 +274,7 @@ int main() {
             << "[ECLIPTIC COMPONENTS]" << std::endl
             << std::endl;
   // The position in space
-  for (size_t i = 0; i < 7; i++) {
+  for (size_t i = indexStart; i < indexEnd; i++) {
     eclipticComponents[i] = getEclipticComponents(celestialBody[i]);
 
     std::cout << celestialBody[i].name << ": " << std::endl
@@ -269,7 +304,7 @@ int main() {
   }
   std::cout << "------------------------------" << std::endl;
   // Perturbations of Jupiter, Saturn and Uranus
-  for (size_t i = 0; i < 7; i++) {
+  for (size_t i = indexStart; i < indexEnd; i++) {
     if (eclipticComponents[i].name == "jupiter") {
       eclipticComponents[i].longitudeEclipse -=
           0.332 * sin(2 * Mj - 5 * Ms - 67.6);
@@ -307,32 +342,32 @@ int main() {
   }
 
   // Geocentric (Earth-centered) coordinates
-
   std::cout << "------------------------------" << std::endl
             << "[DISTANCE TO EARTH IN AU]" << std::endl
             << std::endl;
-  for (size_t i = 0; i < 7; i++) {
-    const double xh = eclipticComponents[i].radiusVector *
-                      cos(eclipticComponents[i].longitudeEclipse) *
-                      cos(eclipticComponents[i].latitudeEclipse);
-    const double yh = eclipticComponents[i].radiusVector *
-                      sin(eclipticComponents[i].longitudeEclipse) *
-                      cos(eclipticComponents[i].latitudeEclipse);
-    const double zh = eclipticComponents[i].radiusVector *
-                      sin(eclipticComponents[i].latitudeEclipse);
+  for (size_t i = indexStart; i < indexEnd; i++) {
+    const double distanceAsAU = getGeocentricVector(eclipticComponents[i]);
 
-    const double xg = xh + sunVector.xs;
-    const double yg = yh + sunVector.ys;
-    const double zg = zh;
-
-    // Geocentric distance
-    const double xe = xg;
-    const double ye = yg * cos(eclipticObliquity) - zg * sin(eclipticObliquity);
-    const double ze = yg * sin(eclipticObliquity) + zg * cos(eclipticObliquity);
-
-    const double rg = sqrt(xe * xe + ye * ye + ze * ze);
-
-    std::cout << eclipticComponents[i].name << ": " << rg << std::endl;
+    std::cout << eclipticComponents[i].name << ": " << distanceAsAU
+              << std::endl;
   }
   std::cout << std::endl << "------------------------------" << std::endl;
+
+  // Test
+
+  std::cout << "day number: " << dayNum << std::endl;
+
+  std::cout << "------------------------------" << std::endl
+            << "[\% off]" << std::endl
+            << std::endl;
+  for (size_t i = indexStart; i < indexEnd; i++) {
+    const double distanceAsAU = getGeocentricVector(eclipticComponents[i]);
+
+    std::cout << eclipticComponents[i].name << ": "
+              << 1 - celestialBody[i].actualDistance / distanceAsAU
+              << std::endl;
+  }
+  std::cout << std::endl << "------------------------------" << std::endl;
+
+  std::cout << "day num: " << dayNum << std::endl;
 }
