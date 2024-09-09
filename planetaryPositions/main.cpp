@@ -36,9 +36,10 @@ struct EclipticComponents {
 double getDayNum() {
   const int year = 2024;
   const int month = 9;
-  const int day = 4;
+  const int day = 5;
   const double universalTime = 0.0;
 
+  // intentional integer division
   double totDays = 367 * year - 7 * (year + (month + 9) / 12) / 4 -
                    3 * ((year + (month - 9) / 7) / 100 + 1) / 4 +
                    275 * month / 9 + day - 730515;
@@ -55,13 +56,11 @@ const double eclipticObliquity = 23.4393 - 3.563E-7 * dayNum;
 
 // convert to scalar between 0 and 360 inclusive.
 double toAngle(double scalar) {
-  while (scalar > 360) {
-    scalar -= 360;
+  float mod = remainder(scalar, 360);
+  if (mod < 0) {
+    mod += 360;
   }
-  while (scalar < 0) {
-    scalar += 360;
-  }
-  return scalar;
+  return mod;
 }
 
 // Geocentric coordinates of the sun
@@ -96,50 +95,42 @@ SunVector getSunVector() {
 EclipticComponents getEclipticComponents(CelestialBody& body) {
   body.meanAnomaly = toAngle(body.meanAnomaly);
 
-  double eccentricAnomaly =
-      body.meanAnomaly + body.eccentricity * (180 / M_PI) *
-                             sin(body.meanAnomaly) *
-                             (1.0 + body.eccentricity * cos(body.meanAnomaly));
+  double eccentricAnomaly = body.meanAnomaly;
+  double delta = 0.05;
 
-  if (body.eccentricity > 0.05) {
-    int count = 0;
-    double difference;
-    double E0 = eccentricAnomaly;
-    double E1;
-    do {
-      if (count > 999) {
-        std::cout << body.name << " not converging " << body.eccentricity
-                  << std::endl;
-        break;
-      };
-
-      E1 = E0 - (E0 - body.eccentricity * (180.0 / M_PI) * sin(E0) -
-                 body.meanAnomaly) /
-                    (1 - body.eccentricity * cos(E0));
-
-      difference = std::abs(E1 - eccentricAnomaly);
-      count++;
-      E0 = E1;
-
-    } while (difference > 0.1);
-
-    if (difference <= 0.01) {
-      eccentricAnomaly = E1;
-    }
+  while (std::abs(delta) >= .0001) {
+    std::cout << "delta: " << delta << std::endl;
+    delta = eccentricAnomaly - body.eccentricity * sin(eccentricAnomaly) -
+            body.meanAnomaly;
+    eccentricAnomaly = eccentricAnomaly -
+                       delta / (1 - body.eccentricity * cos(eccentricAnomaly));
   }
 
   const double xv =
       body.semimajorAxis * (cos(eccentricAnomaly) - body.eccentricity);
 
   const double yv = body.semimajorAxis *
-                    sqrt(1.0 - body.eccentricity * body.eccentricity) *
+                    sqrt(1 - body.eccentricity * body.eccentricity) *
                     sin(eccentricAnomaly);
 
-  const double trueAnomaly = atan2(yv, xv);
+  // const double trueAnomaly = atan2(yv, xv);
 
-  std::cout << "true anomaly: " << trueAnomaly << std::endl;
+  const double trueAnomaly =
+      body.meanAnomaly +
+      180 / M_PI *
+          ((2 * body.eccentricity - pow(body.eccentricity, 3) / 4) *
+               sin(body.meanAnomaly) +
+           5 / 4 * pow(body.eccentricity, 2) * sin(2 * body.meanAnomaly) +
+           13 / 12 * pow(body.eccentricity, 3) * sin(3 * body.meanAnomaly));
 
-  const double radiusVector = sqrt(xv * xv + yv * yv);
+  std::cout << "true Anomaly: " << trueAnomaly << std::endl;
+  // const double trueAnomaly = 73.04;
+
+  const double radiusVector = body.semimajorAxis *
+                              (1 - pow(body.eccentricity, 2)) /
+                              (1 + body.eccentricity * cos(trueAnomaly));
+  // const double radiusVector = sqrt(xv * xv + yv * yv);
+  // std::cout << "radiusVector: " << radiusVector << std::endl;
 
   const double xh =
       radiusVector * (cos(body.longitudeOfAscendingNode) *
@@ -223,7 +214,7 @@ int main() {
   mars.semimajorAxis = 1.523688;
   mars.eccentricity = 0.048498 + 4.469E-9 * dayNum;
   mars.meanAnomaly = 18.6021 + 0.5240207766 * dayNum;
-  mars.actualDistance = 1.41;
+  mars.actualDistance = 1.40;
 
   jupiter.name = "jupiter";
   jupiter.longitudeOfAscendingNode = 100.4542 + 2.76854E-5 * dayNum;
