@@ -6,3 +6,5 @@ IndentWidth: 3
 MaxEmptyLinesToKeep : 2
 NamespaceIndentation: All
 UseTab: Never
+AllowShortFunctionsOnASingleLine: Empty
+

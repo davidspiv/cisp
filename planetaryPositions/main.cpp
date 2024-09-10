@@ -113,15 +113,15 @@ EclipticComponents getEclipticComponents(CelestialBody& body) {
                     sqrt(1 - body.eccentricity * body.eccentricity) *
                     sin(eccentricAnomaly);
 
-  // const double trueAnomaly = atan2(yv, xv);
+  const double trueAnomaly = atan2(yv, xv);
 
-  const double trueAnomaly =
-      body.meanAnomaly +
-      180 / M_PI *
-          ((2 * body.eccentricity - pow(body.eccentricity, 3) / 4) *
-               sin(body.meanAnomaly) +
-           5 / 4 * pow(body.eccentricity, 2) * sin(2 * body.meanAnomaly) +
-           13 / 12 * pow(body.eccentricity, 3) * sin(3 * body.meanAnomaly));
+  // const double trueAnomaly =
+  //     body.meanAnomaly +
+  //     180 / M_PI *
+  //         ((2 * body.eccentricity - pow(body.eccentricity, 3) / 4) *
+  //              sin(body.meanAnomaly) +
+  //          5 / 4 * pow(body.eccentricity, 2) * sin(2 * body.meanAnomaly) +
+  //          13 / 12 * pow(body.eccentricity, 3) * sin(3 * body.meanAnomaly));
 
   std::cout << "true Anomaly: " << trueAnomaly << std::endl;
   // const double trueAnomaly = 73.04;
