@@ -34,8 +34,9 @@ const double MILES_PLUTO = 318.87e7;
 
 
 // main() calculate the travel time to given planet from a specified starting
-// point and velocity. Prints result to screen. Pre: none Post: End program is
-// displayed
+// point and velocity. Prints result to screen.
+// Pre: none Post:
+// End program is displayed
 int main()
 {
    int milesFromEarth = 0;
@@ -77,7 +78,7 @@ void display(const string &output, bool carriageReturn)
 }
 
 
-// getInteger() displays an input prompt passed by argument. Then gets an
+// getInteger() displays an input prompt via its only argument. Then gets an
 // integer from the user and loop if it is not above 0 or below the overflow
 // limit of an integer.
 // Pre: inputPrompt is passed as an immutable reference
@@ -87,7 +88,6 @@ int getInteger(const string &inputPrompt)
    int input = 0;
 
    display(inputPrompt, 0);
-
    cin >> input;
 
    while (cin.fail() || input <= 0) {
@@ -97,6 +97,7 @@ int getInteger(const string &inputPrompt)
       cin.ignore(1000, '\n');
       cin >> input;
    }
+
    return input;
 }
 
@@ -105,7 +106,7 @@ int getInteger(const string &inputPrompt)
 // Pre: Input must be string. Will work even if empty or no characters
 // applicable
 // Post: the lowercase input is returned. No other characters in the string
-// should have changed.
+// should be changed.
 string toLowercase(string input)
 {
    for (size_t charIndex = 0; charIndex < input.length(); charIndex++) {
@@ -131,28 +132,27 @@ double getTargetDistance()
    while (targetDistance < 1) {
 
       cin >> planet;
-
       planet = toLowercase(planet);
 
-      if (planet == "mercury") {
+      if (planet.find("mercury") != string::npos) {
          targetDistance = MILES_MERCURY;
       }
-      else if (planet == "venus") {
+      else if (planet.find("venus") != string::npos) {
          targetDistance = MILES_VENUS;
       }
-      else if (planet == "mars") {
+      else if (planet.find("mars") != string::npos) {
          targetDistance = MILES_MARS;
       }
-      else if (planet == "jupiter") {
+      else if (planet.find("jupiter") != string::npos) {
          targetDistance = MILES_JUPITER;
       }
-      else if (planet == "saturn") {
+      else if (planet.find("saturn") != string::npos) {
          targetDistance = MILES_SATURN;
       }
-      else if (planet == "pluto") {
+      else if (planet.find("pluto") != string::npos) {
          targetDistance = MILES_PLUTO;
       }
-      else if (planet == "neptune") {
+      else if (planet.find("neptune") != string::npos) {
          targetDistance = MILES_NEPTUNE;
       }
       else {
@@ -172,7 +172,7 @@ double getTargetDistance()
 // Pre: milesFromEarth as an int, targetDistance as a double, velocityAsMph as
 // an int. None of these can be 0. The absolute difference of targetDistance
 // and milesFromEarth can't be equal or greater than 2147483648
-// Post: integer is returned
+// Post: a positive integer is returned
 double calcYears(int milesFromEarth, double targetDistance, int velocityAsMph)
 {
    const double distanceInMiles = abs(targetDistance - milesFromEarth);
@@ -191,9 +191,8 @@ string formatDouble(double yearsAsDouble)
    string yearsAsString = to_string(yearsAsDouble);
    yearsAsString = yearsAsString.substr(0, yearsAsString.length() - 4);
 
-   for (int digitIndex = yearsAsString.length() - 6; digitIndex > 0;
-        digitIndex = digitIndex - 3) {
-      yearsAsString.insert(digitIndex, ",");
+   for (int i = yearsAsString.length() - 6; i > 0; i = i - 3) {
+      yearsAsString.insert(i, ",");
    }
 
    return yearsAsString;

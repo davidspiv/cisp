@@ -1,10 +1,9 @@
+AllowShortFunctionsOnASingleLine: Empty
 AllowShortIfStatementsOnASingleLine: false
 BreakBeforeBraces: Stroustrup
 ColumnLimit: 79
-IndentCaseLabels: false
 IndentWidth: 3
 MaxEmptyLinesToKeep : 2
 NamespaceIndentation: All
 UseTab: Never
-AllowShortFunctionsOnASingleLine: Empty
 
