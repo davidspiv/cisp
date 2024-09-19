@@ -57,8 +57,8 @@ double toAngle(double scalar) {
 int main() {
   const double dayNum = getDayNum();
 
-  const double longitudeOfAscendingNode = 49.57854 + 2.11081E-5 * dayNum;
-  const double orbitalInclination = 1.8497 - 1.78E-8 * dayNum;
+  // const double longitudeOfAscendingNode = 49.57854 + 2.11081E-5 * dayNum;
+  // const double orbitalInclination = 1.8497 - 1.78E-8 * dayNum;
   // const double argumentOfPerihelion = 206.650 + 2.92961E-5 * dayNum;
   const double semimajorAxis = 1.52366231;
   const double eccentricity = 0.09341233 + 4.469E-9 * dayNum;
@@ -92,25 +92,28 @@ int main() {
   const double radiusVector = semimajorAxis * (1 - pow(eccentricity, 2)) /
                               (1 + eccentricity * cos(trueAnomaly));
 
-  const float x = radiusVector *
-                  (cos(longitudeOfAscendingNode) *
-                       cos(trueAnomaly + 336.04084 - longitudeOfAscendingNode) -
-                   sin(longitudeOfAscendingNode) *
-                       sin(trueAnomaly + 336.04084 - longitudeOfAscendingNode) *
-                       cos(orbitalInclination));
-  const float y = radiusVector *
-                  (sin(longitudeOfAscendingNode) *
-                       cos(trueAnomaly + 336.04084 - longitudeOfAscendingNode) +
-                   cos(longitudeOfAscendingNode) *
-                       sin(trueAnomaly + 336.04084 - longitudeOfAscendingNode) *
-                       cos(orbitalInclination));
-  const float z =
-      radiusVector * (sin(trueAnomaly + 336.04084 - longitudeOfAscendingNode) *
-                      sin(orbitalInclination));
+  // const float x = radiusVector *
+  //                 (cos(longitudeOfAscendingNode) *
+  //                      cos(trueAnomaly + 336.04084 -
+  //                      longitudeOfAscendingNode) -
+  //                  sin(longitudeOfAscendingNode) *
+  //                      sin(trueAnomaly + 336.04084 -
+  //                      longitudeOfAscendingNode) * cos(orbitalInclination));
+  // const float y = radiusVector *
+  //                 (sin(longitudeOfAscendingNode) *
+  //                      cos(trueAnomaly + 336.04084 -
+  //                      longitudeOfAscendingNode) +
+  //                  cos(longitudeOfAscendingNode) *
+  //                      sin(trueAnomaly + 336.04084 -
+  //                      longitudeOfAscendingNode) * cos(orbitalInclination));
+  // const float z =
+  //     radiusVector * (sin(trueAnomaly + 336.04084 - longitudeOfAscendingNode)
+  //     *
+  //                     sin(orbitalInclination));
 
   display(trueAnomaly, "trueAnomaly");
   display(radiusVector, "radiusVector");
-  display(x, "x");
+  // display(x, "x");
 }
 
 // 76.58

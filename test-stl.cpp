@@ -45,14 +45,14 @@ int main() {
 
   float angle = 54321.34;
 
-  const int digit = getDigit(angle, 5);
+  // const int digit = getDigit(angle, 5);
 
   float test = remainder(angle, 360);
   if (test < 0) {
     test += 360;
   }
 
-  const float test2 = toAngle(angle);
+  // const float test2 = toAngle(angle);
 
   cout << "max " << arrSize << endl;
   int* i = max_element(array, array + arrSize);

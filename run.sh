@@ -1,3 +1,3 @@
 #!/bin/bash
 
-g++ $1 && ./a.out && rm ./a.out
+g++ -Wall $1 && ./a.out && rm ./a.out

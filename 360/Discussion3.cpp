@@ -1,8 +1,27 @@
+/******************************************************************************
+# Author:           David Spivack
+# Discussion:       3
+# Date:             9/14/24
+# Description:      Output a coin breakdown from a user input of total pennies.
+# Sources:          Assignment 3 specifications
+# Comments:         I struggled to isolate the calculation and the display
+#                   portion of the program. My first instinct was to have the
+#                   calculate function call the display function for each coin
+#                   denomination. However, structuring my program so that main
+#                   called each function separately was more readable with less
+#                   side effects.
+#******************************************************************************/
+
 #include <iostream>
+#include <numeric>
 #include <string>
+
 using namespace std;
 
-void display(const string &output, bool carriageReturn)
+
+// outputs value from first argument to console and flushes the output stream
+// buffer either via std::endl or std::flush depending on the second argument.
+void display(const string &output, bool carriageReturn = 1)
 {
    if (carriageReturn) {
       cout << output << endl;
@@ -12,78 +31,110 @@ void display(const string &output, bool carriageReturn)
    cout << output << flush;
 }
 
-int calcChange(int val, int change)
+
+// gets an integer from the user and loops if it is not at or above 0 or below
+// the overflow limit of an integer.
+int getChange()
 {
-   return change - change % val;
+   int cents = 0;
+
+   display("\nEnter in your total change in cents: ", 0);
+   cin >> cents;
+
+   while (cin.fail() || cents < 0) {
+      cout << endl
+           << "Must be a number between 0 and 2147483647 inclusive. Try "
+              "again: ";
+
+      cin.clear();
+      cin.ignore(1000, '\n');
+      cin >> cents;
+   }
+
+   display("\n", 0);
+
+   return cents;
 }
+
+
+// displays formatted output line specific to the denomination
+void displayCoinValue(int coinValue, int denominator)
+{
+   const string coinQuantityAsString = to_string(coinValue / denominator);
+
+   string message = "";
+   string coinTypeAsString = "";
+
+   switch (denominator) {
+   case 100:
+      coinTypeAsString = " Dollar";
+      break;
+   case 25:
+      coinTypeAsString = " Quarter";
+      break;
+   case 10:
+      coinTypeAsString = " Dime";
+      break;
+   case 5:
+      coinTypeAsString = " Nickle";
+      break;
+   default:
+      coinTypeAsString = " Cent";
+      break;
+   }
+
+   if (coinValue > 0) {
+      message += coinQuantityAsString + coinTypeAsString;
+   }
+
+   if (coinValue > denominator) {
+      message += "s";
+   }
+
+   if (message != "") {
+      display(message);
+   }
+}
+
+
+// calculates the value (as cents) of the maximum number of a specified coin
+// type that can be used
+int calcCoinValue(int cents, int denominator)
+{
+   return cents - cents % denominator;
+}
+
+
+// pulls coin logic out of main
+void handleCoins(int change)
+{
+   const int coins[] = {100, 25, 10, 5, 1};
+
+   for (int coin : coins) {
+      const int coinValue = calcCoinValue(change, coin);
+      displayCoinValue(coinValue, coin);
+
+      change -= coinValue;
+   }
+}
+
 
 int main()
 {
-   // const int CHANGE[] = {100, 25, 10, 5, 1};
-   string outputMessage = "";
-   int cents = 0;
-   cout << "Welcome!" << endl;
-   cout << "\nEnter in your total change in cents: ";
-   cin >> cents;
+   int change = 0;
 
-   int dollars = calcChange(100, cents);
-   if (dollars > 0) {
-      outputMessage += "\n" + to_string(dollars / 100) + " Dollar";
+   display("Welcome!");
+
+   change = getChange();
+
+   if (change > 0) {
+      handleCoins(change);
+   }
+   else {
+      display("No Change.");
    }
 
-   if (dollars > 100) {
-      outputMessage += "s";
-   }
-
-   cents -= dollars;
-
-   int quarters = calcChange(25, cents);
-   if (quarters > 0) {
-      outputMessage += "\n" + to_string(quarters / 25) + " Quarter";
-   }
-
-   if (quarters > 25) {
-      outputMessage += "s";
-   }
-
-   cents -= quarters;
-
-   int dimes = calcChange(10, cents);
-   if (dimes > 0) {
-      outputMessage += "\n" + to_string(dimes / 10) + " Dime";
-   }
-
-   if (dimes > 10) {
-      outputMessage += "s";
-   }
-
-   cents -= dimes;
-
-   int nickels = calcChange(5, cents);
-   if (nickels > 0) {
-      outputMessage += "\n" + to_string(nickels / 5) + " Nickel";
-   }
-
-   if (nickels > 5) {
-      outputMessage += "s";
-   }
-
-   cents -= nickels;
-
-   if (cents > 0) {
-      outputMessage += "\n" + to_string(cents) + " Cent";
-   }
-
-   if (cents > 1) {
-      outputMessage += "s";
-   }
-
-   if (outputMessage == "") {
-      outputMessage += "No change.";
-   }
-
-   cout << outputMessage << endl;
-   cout << "\nGoodbye!" << endl;
+   display("\nGoodbye!");
 
    return 0;
 }
