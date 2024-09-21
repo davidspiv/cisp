@@ -2,15 +2,13 @@
 # Author:           David Spivack
 # Assignment:       Assignment 4
 # Date:             9/20/24
-# Description:      The user will be presented with a menu showing options to
-#                   “add a waypoint”, “show total travel time”, or “quit”. When
-#                   adding a waypoint, the user enters the origin point, name
-#                   of a planet, and miles per hour. The travel time as
-#                   years will be added to a total and displayed when the user
-#                   chooses the relevant menu option.
+# Description:      Calculate the time scalar to celestial bodies via three
+#                   user inputs: A heliocentric origin point, a celestial body,
+#                   and a speed in miles per hour. Show sum of time scalars for
+#                   all waypoints entered during runtime.
 # Sources:          Assignment 3 specifications
-#                   planet distances are relative to the current date and
-#                   were sourced from NASA in early August 2024.
+#                   planet distances are relative to the current date and were
+#                   sourced from NASA 9/9/24, 9028.83 days since J2000 epoch
 #******************************************************************************/
 
 #include "valid.h"
@@ -34,20 +32,24 @@ void display(const string &output, bool carriageReturn = 1);
 void displayMenu();
 void displayTravelTime(const string &resultLabel, double totalYears);
 
-// business logic
+// business
 double calcYears(int geocentricOrigin, double targetDistance, int velocity);
 double handleTravelTime();
 
 const int ADD_WAYPOINT = 1;
 const int QUIT = 2;
+
 const int HOURS_PER_YEAR = 8760;
-const double MILES_VENUS = 667.00e5;
-const double MILES_MERCURY = 765.56e5;
-const double MILES_MARS = 133.68e6;
-const double MILES_JUPITER = 475.74e6;
-const double MILES_SATURN = 804.92e6;
-const double MILES_NEPTUNE = 269.03e7;
-const double MILES_PLUTO = 318.87e7;
+const double MILES_PER_AU = 9.296e+7;
+
+const double VENUS_DISTANCE_AS_AU = 1.42;
+const double MERCURY_DISTANCE_AS_AU = 1.29;
+const double MARS_DISTANCE_AS_AU = 1.31;
+const double JUPITER_DISTANCE_AS_AU = 4.83;
+const double SATURN_DISTANCE_AS_AU = 8.68;
+const double URANUS_DISTANCE_AS_AU = 19.04;
+const double NEPTUNE_DISTANCE_AS_AU = 28.89;
+const double PLUTO_DISTANCE_AS_AU = 34.56;
 
 
 int main()
@@ -148,32 +150,35 @@ double getTargetDistance()
          display("Planet must be within our solar system.");
       }
       else if (planet.find("mercury") != string::npos) {
-         targetDistance = MILES_MERCURY;
+         targetDistance = MERCURY_DISTANCE_AS_AU;
       }
       else if (planet.find("venus") != string::npos) {
-         targetDistance = MILES_VENUS;
+         targetDistance = VENUS_DISTANCE_AS_AU;
       }
       else if (planet.find("mars") != string::npos) {
-         targetDistance = MILES_MARS;
+         targetDistance = MARS_DISTANCE_AS_AU;
       }
       else if (planet.find("jupiter") != string::npos) {
-         targetDistance = MILES_JUPITER;
+         targetDistance = JUPITER_DISTANCE_AS_AU;
+      }
+      else if (planet.find("uranus") != string::npos) {
+         targetDistance = URANUS_DISTANCE_AS_AU;
       }
       else if (planet.find("saturn") != string::npos) {
-         targetDistance = MILES_SATURN;
+         targetDistance = SATURN_DISTANCE_AS_AU;
       }
       else if (planet.find("pluto") != string::npos) {
-         targetDistance = MILES_PLUTO;
+         targetDistance = PLUTO_DISTANCE_AS_AU;
       }
       else if (planet.find("neptune") != string::npos) {
-         targetDistance = MILES_NEPTUNE;
+         targetDistance = NEPTUNE_DISTANCE_AS_AU;
       }
       else {
          display("Planet must be within our solar system.");
       }
    }
 
-   return targetDistance;
+   return targetDistance * MILES_PER_AU;
 }
 
 
@@ -249,7 +254,7 @@ void displayTravelTime(const string &resultLabel, double totalYears)
    string resultBorder = "";
 
    if (totalYears == 0) {
-      resultAsString += "None!";
+      resultAsString += "None";
    }
    else if (totalYears == 1) {
       resultAsString += "1 year";
@@ -288,7 +293,6 @@ double handleTravelTime()
    const double years = calcYears(geocentricOrigin, targetDistance, velocity);
 
    displayTravelTime("Travel time", years);
-   display("");
 
    return years;
 }
