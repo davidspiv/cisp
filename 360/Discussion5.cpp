@@ -1,8 +1,8 @@
 /******************************************************************************
 # Author:           David Spivack
-# Discussion:       4
+# Discussion:       5
 # Date:             9/19/24
-# Sources:          Discussion 4 specifications
+# Sources:          Discussion 5 specifications
 # Comments:         I struggled with passing the array back and forth between
 #                   functions amd choosing between passing by pointer vs
 #                   passing by reference. I ended up passing the array size as
