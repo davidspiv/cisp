@@ -3,7 +3,7 @@
 # Discussion:       6
 # Date:             9/21/24
 # Description:      Slideshow that displays different uses for the (*) as well
-#                   as general info surrounding pointers. 
+#                   as general info surrounding pointers.
 # Sources:          Discussion 6 specifications
 # Comments:         Implementing vector-like behavior without vectors.
 #                   Definitely not efficient but shows behavior that would be
@@ -318,6 +318,7 @@ void getMoreSlots(string *&slideShow, size_t slideCount)
       copyArr[i] = slideShow[i];
    }
 
+   delete[] slideShow;
    slideShow = new string[slideCount + 10];
 
    for (size_t i = 0; i < slideCount; i++) {
