@@ -35,7 +35,7 @@ struct Cord {
   double z;
 };
 
-struct OrbitalElements_J2000 {
+struct OrbitalElements {
   string name;
   double semiMajorAxis_AU;
   double eccentricity;
@@ -58,7 +58,7 @@ double normalizeAngle(double scalar) {
 double getDayNum() {
   const int year = 2024;
   const int month = 9;
-  const int day = 26;
+  const int day = 9;
   const double universalTime = 13.10;
 
   // intentional integer division
@@ -75,7 +75,7 @@ double toRadians(double degrees) { return degrees * (M_PI / 180.0); }
 
 // double radiusVectors[] = {0.0, 0.0, 0.0};
 
-Cord getHeliocentricCords(const OrbitalElements_J2000& body, int dayNum) {
+Cord getHeliocentricCords(const OrbitalElements& body, int dayNum) {
   const double diurnalMotion = 360 / body.period;
   const double normalizedMeanAnomaly_Deg =
       normalizeAngle(body.meanAnomaly_Deg + diurnalMotion * dayNum);
@@ -87,8 +87,7 @@ Cord getHeliocentricCords(const OrbitalElements_J2000& body, int dayNum) {
   const double p = toRadians(body.longitudeOfPerihelion_Deg);
   const double i = toRadians(body.orbitalInclination_Deg);
 
-  // Initial approximation of Eccentric MeanAnomaly_Deg (E) using Kepler's
-  // equation
+  // Initial approximation of Eccentric Anomaly (E) using Kepler's equation
   double E = M + e * sin(M) * (1 + e * cos(M));
   double delta;
 
@@ -116,23 +115,13 @@ Cord getHeliocentricCords(const OrbitalElements_J2000& body, int dayNum) {
 
   cout << "From sun (AU) " << body.name << ": " << r << endl;
 
-  // if (body.name == "jupiter") {
-  //   radiusVectors[0] = r;
-  // }
-  // if (body.name == "saturn") {
-  //   radiusVectors[1] = r;
-  // }
-  // if (body.name == "uranus") {
-  //   radiusVectors[2] = r;
-  // }
-
   return {x, y, z};
 }
 
 int main() {
   const double dayNum = getDayNum();
 
-  OrbitalElements_J2000 mercury;
+  OrbitalElements mercury;
   mercury.name = "mercury";
   mercury.semiMajorAxis_AU = 0.38709893;
   mercury.eccentricity = 0.20563069;
@@ -142,7 +131,7 @@ int main() {
   mercury.meanAnomaly_Deg = 174.796;
   mercury.period = 87.969;
 
-  OrbitalElements_J2000 venus;
+  OrbitalElements venus;
   venus.name = "venus";
   venus.semiMajorAxis_AU = 0.72333199;
   venus.eccentricity = 0.00677323;
@@ -152,7 +141,7 @@ int main() {
   venus.meanAnomaly_Deg = 50.45;
   venus.period = 224.7008;
 
-  OrbitalElements_J2000 earth;
+  OrbitalElements earth;
   earth.name = "earth";
   earth.semiMajorAxis_AU = 1.00000011;
   earth.eccentricity = 0.01671022;
@@ -162,7 +151,7 @@ int main() {
   earth.meanAnomaly_Deg = 357.51716;
   earth.period = 365.259636;
 
-  OrbitalElements_J2000 mars;
+  OrbitalElements mars;
   mars.name = "mars";
   mars.semiMajorAxis_AU = 1.52366231;
   mars.eccentricity = 0.09341233;
@@ -172,7 +161,7 @@ int main() {
   mars.meanAnomaly_Deg = 19.387;
   mars.period = 686.9957;
 
-  OrbitalElements_J2000 jupiter;
+  OrbitalElements jupiter;
   jupiter.name = "jupiter";
   jupiter.semiMajorAxis_AU = 5.20336301;
   jupiter.eccentricity = 0.04839266;
@@ -182,7 +171,7 @@ int main() {
   jupiter.meanAnomaly_Deg = 20.020;
   jupiter.period = 11.862;
 
-  OrbitalElements_J2000 saturn;
+  OrbitalElements saturn;
   saturn.name = "saturn";
   saturn.semiMajorAxis_AU = 9.53707032;
   saturn.eccentricity = 0.05415060;
@@ -192,7 +181,7 @@ int main() {
   saturn.meanAnomaly_Deg = 317.020;
   saturn.period = 29.4475;
 
-  OrbitalElements_J2000 uranus;
+  OrbitalElements uranus;
   uranus.name = "uranus";
   uranus.semiMajorAxis_AU = 19.19126393;
   uranus.eccentricity = 0.04716771;
@@ -202,7 +191,7 @@ int main() {
   uranus.meanAnomaly_Deg = 142.238600;
   uranus.period = 84.011;
 
-  OrbitalElements_J2000 neptune;
+  OrbitalElements neptune;
   neptune.name = "neptune";
   neptune.semiMajorAxis_AU = 30.06896348;
   neptune.eccentricity = 0.00858587;
@@ -212,8 +201,8 @@ int main() {
   neptune.meanAnomaly_Deg = 259.883;
   neptune.period = 164.79;
 
-  OrbitalElements_J2000 planets[] = {mercury, venus,  earth,  mars,
-                                     jupiter, saturn, uranus, neptune};
+  OrbitalElements planets[] = {mercury, venus,  earth,  mars,
+                               jupiter, saturn, uranus, neptune};
 
   const size_t size = sizeof(planets) / sizeof(*planets);
 
@@ -222,65 +211,6 @@ int main() {
   for (size_t i = 0; i < size; i++) {
     heliocentricCords[i] = getHeliocentricCords(planets[i], dayNum);
   }
-
-  // const double mJ = toRadians(planets[4].meanAnomaly_Deg);
-  // const double mS = toRadians(planets[5].meanAnomaly_Deg);
-  // const double mU = toRadians(planets[6].meanAnomaly_Deg);
-  // for (size_t i = 0; i < size; i++) {
-  //   double radiusVector;
-
-  //   if (planets[i].name != "jupiter" && planets[i].name != "saturn" &&
-  //       planets[i].name != "uranus") {
-  //     continue;
-  //   }
-
-  //   if (planets[i].name == "jupiter") {
-  //     radiusVector = radiusVectors[0];
-  //   } else if (planets[i].name == "saturn") {
-  //     radiusVector = radiusVectors[1];
-  //   } else if (planets[i].name == "uranus") {
-  //     radiusVector = radiusVectors[2];
-  //   } else {
-  //     continue;
-  //   }
-
-  //   double x = heliocentricCords[i].x;
-  //   double y = heliocentricCords[i].y;
-  //   double z = heliocentricCords[i].z;
-  //   double lonecl = atan2(y, x);
-  //   double latecl = atan2(z, sqrt(x * x + y * y));
-
-  //   if (planets[i].name == "jupiter") {
-  //     lonecl -= 0.332 * sin(2 * mJ - 5 * mS - 67.6);
-  //     lonecl -= 0.056 * sin(2 * mJ - 2 * mS + 21);
-  //     lonecl += 0.042 * sin(3 * mJ - 5 * mS + 21);
-  //     lonecl -= 0.036 * sin(mJ - 2 * mS);
-  //     lonecl += 0.022 * cos(mJ - mS);
-  //     lonecl += 0.023 * sin(2 * mJ - 3 * mS + 52);
-  //     lonecl -= 0.016 * sin(mJ - 5 * mS - 69);
-
-  //   } else if (planets[i].name == "saturn") {
-  //     lonecl += 0.812 * sin(2 * mJ - 5 * mS - 67.6);
-  //     lonecl -= 0.229 * cos(2 * mJ - 4 * mS - 2);
-  //     lonecl += 0.119 * sin(mJ - 2 * mS - 3);
-  //     lonecl += 0.046 * sin(2 * mJ - 6 * mS - 69);
-  //     lonecl += 0.014 * sin(mJ - 3 * mS + 32);
-
-  //     latecl -= 0.020 * cos(2 * mJ - 4 * mS - 2);
-  //     latecl += 0.018 * sin(2 * mJ - 6 * mS - 49);
-
-  //   } else if (planets[i].name == "uranus") {
-  //     lonecl += 0.040 * sin(mS - 2 * mU + 6);
-  //     lonecl += 0.035 * sin(mS - 3 * mU + 33);
-  //     lonecl -= 0.015 * sin(mJ - mU + 20);
-  //   }
-
-  //   x = radiusVector * cos(lonecl) * cos(latecl);
-  //   y = radiusVector * sin(lonecl) * cos(latecl);
-  //   z = radiusVector * sin(latecl);
-
-  //   heliocentricCords[i] = {x, y, z};
-  // }
 
   cout << endl;
 
@@ -293,13 +223,4 @@ int main() {
 
     cout << "From earth (AU) " << planets[i].name << ": " << distance << endl;
   }
-
-  // display(planets[0].name, "0");
-  // display(planets[1].name, "1");
-  // display(planets[2].name, "2");
-  // display(planets[3].name, "3");
-  // display(planets[4].name, "4");
-  // display(planets[5].name, "5");
-  // display(planets[6].name, "6");
-  // display(planets[7].name, "7");
 }
