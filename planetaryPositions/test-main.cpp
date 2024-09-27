@@ -29,10 +29,37 @@ void display(float output, string label = "", bool cReturn = 1) {
   cout << label << output << flush;
 }
 
+struct Cord {
+  double x;
+  double y;
+  double z;
+};
+
+struct Planet {
+  double m_longitudeOfAscendingNode;
+  double m_orbitalInclination;
+  double m_semimajorAxis;
+  double m_eccentricity;
+  double m_motion;
+  double m_longitudeOfPerihelion;
+  double m_anomalyAtEpoch;
+  double anomalisticYear;
+  double m_anomaly;
+};
+
+// convert to scalar between 0 and 360 inclusive.
+double toAngle(double scalar) {
+  float mod = remainder(scalar, 360);
+  if (mod < 0) {
+    mod += 360;
+  }
+  return mod;
+}
+
 double getDayNum() {
   const int year = 2024;
   const int month = 9;
-  const int day = 13;
+  const int day = 26;
   const double universalTime = 13.10;
 
   // intentional integer division
@@ -45,75 +72,125 @@ double getDayNum() {
   return totDays;
 }
 
-// convert to scalar between 0 and 360 inclusive.
-double toAngle(double scalar) {
-  float mod = remainder(scalar, 360);
-  if (mod < 0) {
-    mod += 360;
-  }
-  return mod;
+double toRadians(double degrees) { return degrees * (M_PI / 180.0); }
+
+Cord getPlanetStats(const Planet& planet) {
+  const double a = planet.m_semimajorAxis;
+  const double e = planet.m_eccentricity;
+  const double M = planet.m_anomaly;
+  const double o = toRadians(planet.m_longitudeOfAscendingNode);
+  const double p = toRadians(planet.m_longitudeOfPerihelion);
+  const double i = toRadians(planet.m_orbitalInclination);
+
+  const double trueAnomaly =
+      M - (180.0 / M_PI) * ((2 * e - pow(e, 3) / 4) * sin(M) +
+                            (5.0 / 4.0) * pow(e, 2) * sin(2 * M) +
+                            (13.0 / 12.0) * pow(e, 3) * sin(3 * M));
+
+  const double v = toRadians(trueAnomaly);
+  // cout << toAngle(trueAnomaly) << endl;
+
+  const double r = a * (1 - pow(e, 2)) / (1 + e * cos(v));
+
+  const float x =
+      r * (cos(o) * cos(v + p - o) - sin(o) * sin(v + p - o) * cos(i));
+  const float y =
+      r * (sin(o) * cos(v + p - o) + cos(o) * sin(v + p - o) * cos(i));
+  const float z = r * (sin(v + p - o) * sin(i));
+
+  display(trueAnomaly, "trueAnomaly");
+  display(r, "radiusVector");
+
+  return {x, y, z};
 }
 
 int main() {
   const double dayNum = getDayNum();
 
-  // const double longitudeOfAscendingNode = 49.57854 + 2.11081E-5 * dayNum;
-  // const double orbitalInclination = 1.8497 - 1.78E-8 * dayNum;
-  // const double argumentOfPerihelion = 206.650 + 2.92961E-5 * dayNum;
-  const double semimajorAxis = 1.52366231;
-  const double eccentricity = 0.09341233 + 4.469E-9 * dayNum;
-  const double meanAnomalyAsData = 19.387 + 0.5240207766 * dayNum;
+  Planet mars;
+  mars.m_longitudeOfAscendingNode = 49.57854;
+  mars.m_orbitalInclination = 1.85061;
+  mars.m_semimajorAxis = 1.52366231;
+  mars.m_eccentricity = 0.09341233;
+  mars.m_anomalyAtEpoch = 19.387;
+  mars.anomalisticYear = 686.9957;
+  mars.m_longitudeOfPerihelion = 336.04084;
+  mars.m_motion = 360 / mars.anomalisticYear;
+  mars.m_anomaly = toAngle(mars.m_anomalyAtEpoch + mars.m_motion * dayNum);
 
-  // const double actualDistanceToSun = 1.48;
-  // const double actualDistanceToEarth = 1.37;
+  Planet venus;
+  venus.m_longitudeOfAscendingNode = 76.68069;
+  venus.m_orbitalInclination = 3.39471;
+  venus.m_semimajorAxis = 0.72333199;
+  venus.m_eccentricity = 0.00677323;
+  venus.m_longitudeOfPerihelion = 131.53298;
+  venus.m_anomalyAtEpoch = 50.45;
+  venus.anomalisticYear = 224.7008;
+  venus.m_motion = 360 / venus.anomalisticYear;
+  venus.m_anomaly = toAngle(venus.m_anomalyAtEpoch + venus.m_motion * dayNum);
 
-  const double meanAnomaly = toAngle(meanAnomalyAsData);
+  Planet mercury;
+  mercury.m_longitudeOfAscendingNode = 48.33167;
+  mercury.m_orbitalInclination = 7.00487;
+  mercury.m_semimajorAxis = 0.38709893;
+  mercury.m_eccentricity = 0.20563069;
+  mercury.m_longitudeOfPerihelion = 77.45645;
+  mercury.m_anomalyAtEpoch = 174.796;
+  mercury.anomalisticYear = 87.969;
+  mercury.m_motion = 360 / mercury.anomalisticYear;
+  mercury.m_anomaly =
+      toAngle(mercury.m_anomalyAtEpoch + mercury.m_motion * dayNum);
 
-  double eccentricAnomaly =
-      meanAnomaly + eccentricity * (180 / M_PI) * sin(meanAnomaly) *
-                        (1.0 + eccentricity * cos(meanAnomaly));
+  Planet earth;
+  earth.m_longitudeOfAscendingNode = -11.26064;
+  earth.m_orbitalInclination = 0.00005;
+  earth.m_semimajorAxis = 1.00000011;
+  earth.m_eccentricity = 0.01671022;
+  earth.m_longitudeOfPerihelion = 102.94719;
+  earth.m_anomalyAtEpoch = 357.51716;
+  earth.anomalisticYear = 365.259636;
+  earth.m_motion = 360 / earth.anomalisticYear;
+  earth.m_anomaly = toAngle(earth.m_anomalyAtEpoch + earth.m_motion * dayNum);
 
-  double delta = .5;
+  // double eccentricAnomaly =
+  //     m_anomaly + m_eccentricity * (180 / M_PI) * sin(m_anomaly) *
+  //                       (1.0 + m_eccentricity * cos(m_anomaly));
 
-  while (abs(delta) >= .0001) {
-    delta =
-        eccentricAnomaly - eccentricity * sin(eccentricAnomaly) - meanAnomaly;
-    eccentricAnomaly =
-        (eccentricAnomaly - delta) / (1 - eccentricity * cos(eccentricAnomaly));
-  }
+  // double delta = .5;
 
-  const double trueAnomaly =
-      meanAnomaly -
-      (180 / M_PI) *
-          ((2 * eccentricity - pow(eccentricity, 3) / 4) * sin(meanAnomaly) +
-           5 / 4 * pow(eccentricity, 2) * sin(2 * meanAnomaly) +
-           13 / 12 * pow(eccentricity, 3) * sin(3 * meanAnomaly));
+  // while (abs(delta) >= .0001) {
+  //   delta =
+  //       eccentricAnomaly - m_eccentricity * sin(eccentricAnomaly) -
+  //       m_anomaly;
+  //   eccentricAnomaly =
+  //       (eccentricAnomaly - delta) / (1 - m_eccentricity *
+  //       cos(eccentricAnomaly));
+  // }
 
-  const double radiusVector = semimajorAxis * (1 - pow(eccentricity, 2)) /
-                              (1 + eccentricity * cos(trueAnomaly));
+  Cord earthCord = getPlanetStats(earth);
+  Cord marsCord = getPlanetStats(mars);
 
-  // const float x = radiusVector *
-  //                 (cos(longitudeOfAscendingNode) *
-  //                      cos(trueAnomaly + 336.04084 -
-  //                      longitudeOfAscendingNode) -
-  //                  sin(longitudeOfAscendingNode) *
-  //                      sin(trueAnomaly + 336.04084 -
-  //                      longitudeOfAscendingNode) * cos(orbitalInclination));
-  // const float y = radiusVector *
-  //                 (sin(longitudeOfAscendingNode) *
-  //                      cos(trueAnomaly + 336.04084 -
-  //                      longitudeOfAscendingNode) +
-  //                  cos(longitudeOfAscendingNode) *
-  //                      sin(trueAnomaly + 336.04084 -
-  //                      longitudeOfAscendingNode) * cos(orbitalInclination));
-  // const float z =
-  //     radiusVector * (sin(trueAnomaly + 336.04084 - longitudeOfAscendingNode)
-  //     *
-  //                     sin(orbitalInclination));
+  const double gX = marsCord.x - earthCord.x;
+  const double gY = marsCord.y - earthCord.y;
+  const double gZ = marsCord.z - earthCord.z;
 
-  display(trueAnomaly, "trueAnomaly");
-  display(radiusVector, "radiusVector");
+  const double distance = sqrt(pow(gX, 2) + pow(gY, 2) + pow(gZ, 2));
+
+  // display(gX, "gX");
+  // display(gY, "gY");
+  // display(gZ, "gZ");
+
+  // const double obliquity = -23.439292;
+
+  // const double qX = gX;
+  // const double qY = gY * cos(obliquity) - gZ * sin(obliquity);
+  // const double qZ = gY * sin(obliquity) + gZ * cos(obliquity);
+
+  // const double distance = sqrt(pow(qX, 2) + pow(qY, 2) + pow(qZ, 2));
+
+  display(distance, "distance");
+
   // display(x, "x");
 }
 
-// 76.58
+// 84.78

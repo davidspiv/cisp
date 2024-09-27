@@ -11,7 +11,7 @@
 #                   sourced from NASA 9/9/24, 9028.83 days since J2000 epoch
 #******************************************************************************/
 
-#include "valid1.h"
+#include "valid.h"
 #include <iomanip>
 #include <iostream>
 #include <string>
@@ -47,13 +47,13 @@ double calcYears(int geocentricOrigin, double planetDistance, int velocity);
 double calcTotalTime(int *origins, Planet *planets, int *velocities);
 void addWaypoint(int &origin, Planet &planet, int &velocity);
 
+const int ADD_WAYPOINT = 1;
+const int HISTORY = 2;
+const int TOTAL = 3;
+const int QUIT = 4;
+
 int main()
 {
-   const int ADD_WAYPOINT = 1;
-   const int HISTORY = 2;
-   const int TOTAL = 3;
-   const int QUIT = 4;
-
    int menuChoice = 0;
    int totalInputs = 0;
    size_t currentMax = 10;
@@ -63,7 +63,7 @@ int main()
    int *velocities = nullptr;
 
    double totalTime = 0.0;
-   string resultString = "";
+   string totalTimeAsString = "";
 
    print("Planet Trip Calculator");
 
@@ -94,12 +94,11 @@ int main()
       }
       else if (menuChoice == TOTAL) {
          totalTime = calcTotalTime(origins, planets, velocities);
-         resultString = formatTimeResult("Total time", totalTime);
-         print(resultString);
+         totalTimeAsString = formatTimeResult("Total time", totalTime);
+         print(totalTimeAsString);
       }
 
    } while (menuChoice != QUIT);
-
 
    delete[] origins;
    delete[] planets;
@@ -150,7 +149,7 @@ int getMenuChoice()
    printMenu();
    menuOption = getInteger("Choose option: ");
 
-   while (menuOption <= 0 || menuOption > 4) {
+   while (menuOption <= 0 || menuOption > QUIT) {
       print("Must choose number from menu options.");
       printMenu();
       menuOption = getInteger("Choose option: ");
@@ -182,7 +181,6 @@ string toLowercase(string input)
 Planet getPlanet()
 {
    const double MILES_PER_AU = 9.296e+7;
-
    const double VENUS_DISTANCE_AS_AU = 1.42;
    const double MERCURY_DISTANCE_AS_AU = 1.29;
    const double MARS_DISTANCE_AS_AU = 1.31;
@@ -299,7 +297,7 @@ double calcYears(int geocentricOrigin, double planetDistance, int velocity)
 // Post: pointer argument now references larger array
 void expandArray(int *&arr, size_t &currentMax)
 {
-   const size_t STEP = 10;
+   const size_t step = 10;
    int copyArr[currentMax];
 
    for (size_t i = 0; i < currentMax; i++) {
@@ -307,20 +305,20 @@ void expandArray(int *&arr, size_t &currentMax)
    }
 
    delete[] arr;
-   arr = new int[currentMax + STEP];
+   arr = new int[currentMax + step];
 
    for (size_t i = 0; i < currentMax; i++) {
       arr[i] = copyArr[i];
    }
 
-   currentMax += STEP;
+   currentMax += step;
 }
 
 
 // overloaded for Planet struct
 void expandArray(Planet *&arr, size_t &currentMax)
 {
-   const size_t step = currentMax;
+   const size_t STEP = 10;
    Planet copyArr[currentMax];
 
    for (size_t i = 0; i < currentMax; i++) {
@@ -329,14 +327,14 @@ void expandArray(Planet *&arr, size_t &currentMax)
    }
 
    delete[] arr;
-   arr = new Planet[currentMax + step];
+   arr = new Planet[currentMax + STEP];
 
    for (size_t i = 0; i < currentMax; i++) {
       arr[i].name = copyArr[i].name;
       arr[i].distance = copyArr[i].distance;
    }
 
-   currentMax += step;
+   currentMax += STEP;
 }
 
 
@@ -348,34 +346,37 @@ void expandArray(Planet *&arr, size_t &currentMax)
 void addWaypoint(int &origin, Planet &planet, int &velocity)
 {
    double years = 0;
-   string resultString = "";
+   string totalTimeAsString = "";
 
    origin = getGeocentricOrigin();
    planet = getPlanet();
    velocity = getVelocity();
    years = calcYears(origin, planet.distance, velocity);
-   resultString = formatTimeResult("Travel time", years);
+   totalTimeAsString = formatTimeResult("Travel time", years);
 
-   print(resultString);
+   print(totalTimeAsString);
 }
 
 
-// calcTotalTime() loops through data arrays and prints out past user inputs and times
+// printHistory() loops through data arrays and prints out past user inputs
+// and times
+// Pre: origins is an int pointer, planets is a Planet struct pointer,
+// velocities as an int pointer
+// Post: formatted input history is displayed
 void printHistory(int *&origins, Planet *&planets, int *&velocities,
                   int totalInputs)
 {
-   cout << setw(15) << left << "\nOrigin" << setw(15) << " Planet" << setw(15)
-        << " Distance" << setw(20) << " Time";
-   cout << setw(15) << left << "\n------" << setw(15) << " ------" << setw(15)
-        << " --------" << setw(20) << " ----" << endl;
-
+   cout << setw(10) << left << "\nOrigin" << setw(10) << " Planet" << setw(10)
+        << " MPH" << setw(20) << " Time";
+   cout << setw(10) << left << "\n------" << setw(10) << " ------" << setw(10)
+        << " ---" << setw(20) << " ----" << endl;
 
    for (int i = 0; i < totalInputs; i++) {
       const double years =
           calcYears(origins[i], planets[i].distance, velocities[i]);
 
-      cout << setw(15) << left << to_string(origins[i]) << setw(15)
-           << planets[i].name << setw(15) << to_string(velocities[i])
+      cout << setw(10) << left << to_string(origins[i]) << setw(10)
+           << planets[i].name << setw(10) << to_string(velocities[i])
            << setw(20) << to_string(years) << endl;
    }
 }
@@ -384,7 +385,7 @@ void printHistory(int *&origins, Planet *&planets, int *&velocities,
 // calcTotalTime() loops through the array and calculates each distance
 // value, returning the sum
 // Pre: origins is an int pointer, planets is a Planet struct pointer,
-// velocities as an int pointer totalTime is a float
+// velocities as an int pointer
 // Post: totalTime is double
 double calcTotalTime(int *origins, Planet *planets, int *velocities)
 {

@@ -11,7 +11,7 @@
 #                   sourced from NASA 9/9/24, 9028.83 days since J2000 epoch
 #******************************************************************************/
 
-#include "valid1.h"
+#include "valid.h"
 #include <iostream>
 #include <string>
 
