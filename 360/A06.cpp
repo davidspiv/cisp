@@ -3,7 +3,7 @@
 # Assignment:       Assignment 6
 # Date:             9/27/24
 # Description:      Calculate the time scalar to celestial bodies via three
-#                   user inputs: a celestial body,
+#                   user inputs: a celestial planet,
 #                   and a speed in miles per hour. Show sum of time scalars for
 #                   all waypoints entered during runtime.
 # Sources:          Assignment 3 specifications
@@ -21,12 +21,12 @@ using namespace std;
 
 struct Planet {
    string name;
-   double semiMajorAxis_AU;
+   double semiMajorAxis;
    double eccentricity;
-   double orbitalInclination_Deg;
-   double longitudeOfAscendingNode_Deg;
-   double longitudeOfPerihelion_Deg;
-   double meanAnomaly_Deg;
+   double orbitalInclination;
+   double longitudeOfAscendingNode;
+   double longitudeOfPerihelion;
+   double meanAnomaly;
    double period;
 };
 
@@ -36,13 +36,9 @@ struct Cord {
    double z;
 };
 
-struct Input {
+struct Waypoint {
    string name;
-   string formattedTime;
-   float milesPerHour;
-};
-
-struct Result {
+   double velocity;
    double geocentricDistance;
    double timeAsYears;
 };
@@ -132,7 +128,7 @@ size_t getPlanetIndex()
       else {
          print("Planet must be within our solar system.");
       }
-   } while (planetIndex > 0);
+   } while (planetIndex < 0);
 
    return planetIndex;
 }
@@ -149,11 +145,14 @@ int getVelocity()
    return velocityAsMph;
 }
 
-void calcYears(const Input &input, Result &result)
+double calcYears(double distanceAsAU, double velocityAsMph)
 {
    const int HOURS_PER_YEAR = 8760;
-   result.timeAsYears =
-       result.geocentricDistance / input.milesPerHour / HOURS_PER_YEAR;
+   const double MILES_PER_AU = 9.296e+7;
+
+   const double distanceAsMiles = distanceAsAU * MILES_PER_AU;
+
+   return distanceAsMiles / velocityAsMph / HOURS_PER_YEAR;
 }
 
 template <typename T> void expandArray(T *&arr, size_t &indexMax)
@@ -175,32 +174,31 @@ template <typename T> void expandArray(T *&arr, size_t &indexMax)
    indexMax += step;
 }
 
-void printHistory(Input *&inputs, Result *&results, size_t numInputs)
+void printHistory(Waypoint *&waypoints, size_t numInputs)
 {
    cout << endl
-        << " Planet" << setw(10) << " Time" << setw(20) << " Distance" << endl;
-   cout << " ------" << setw(10) << " ----" << setw(20) << " --------" << endl;
+        << setw(8) << left << "Planet" << setw(15) << "Distance (AU)"
+        << setw(10) << "Time (yrs)" << endl;
+   cout << setw(8) << left << "------" << setw(15) << "-------------"
+        << setw(10) << "----------" << endl;
 
    for (size_t i = 0; i < numInputs; i++) {
-      calcYears(inputs[i], results[i]);
 
-      cout << setw(10) << inputs[i].name << setw(10)
-           << to_string(inputs[i].milesPerHour) << setw(20)
-           << to_string(results[i].timeAsYears) << endl;
+      cout << setw(8) << left << waypoints[i].name << setw(15)
+           << to_string(waypoints[i].geocentricDistance) << setw(10)
+           << to_string(waypoints[i].timeAsYears) << endl;
    }
 }
 
-double calcTotalTime(Input *&inputs, Result *&results)
+double calcTotalTime(Waypoint *&waypoints)
 {
    int validIndex = 0;
    double totalTime = 0;
 
-   while (inputs[validIndex].formattedTime != "" &&
-          inputs[validIndex].milesPerHour != 0) {
+   while (waypoints[validIndex].name != "" &&
+          waypoints[validIndex].velocity != 0) {
 
-      calcYears(inputs[validIndex], results[validIndex]);
-
-      totalTime += results[validIndex].timeAsYears;
+      totalTime += waypoints[validIndex].timeAsYears;
       validIndex += 1;
    }
 
@@ -251,82 +249,82 @@ Planet *populatePlanets()
 {
    Planet mercury;
    mercury.name = "mercury";
-   mercury.semiMajorAxis_AU = 0.38709893;
+   mercury.semiMajorAxis = 0.38709893;
    mercury.eccentricity = 0.20563069;
-   mercury.orbitalInclination_Deg = 7.00487;
-   mercury.longitudeOfAscendingNode_Deg = 48.33167;
-   mercury.longitudeOfPerihelion_Deg = 77.45645;
-   mercury.meanAnomaly_Deg = 174.796;
+   mercury.orbitalInclination = 7.00487;
+   mercury.longitudeOfAscendingNode = 48.33167;
+   mercury.longitudeOfPerihelion = 77.45645;
+   mercury.meanAnomaly = 174.796;
    mercury.period = 87.969;
 
    Planet venus;
    venus.name = "venus";
-   venus.semiMajorAxis_AU = 0.72333199;
+   venus.semiMajorAxis = 0.72333199;
    venus.eccentricity = 0.00677323;
-   venus.orbitalInclination_Deg = 3.39471;
-   venus.longitudeOfAscendingNode_Deg = 76.68069;
-   venus.longitudeOfPerihelion_Deg = 131.53298;
-   venus.meanAnomaly_Deg = 50.45;
+   venus.orbitalInclination = 3.39471;
+   venus.longitudeOfAscendingNode = 76.68069;
+   venus.longitudeOfPerihelion = 131.53298;
+   venus.meanAnomaly = 50.45;
    venus.period = 224.7008;
 
    Planet earth;
    earth.name = "earth";
-   earth.semiMajorAxis_AU = 1.00000011;
+   earth.semiMajorAxis = 1.00000011;
    earth.eccentricity = 0.01671022;
-   earth.orbitalInclination_Deg = 0.00005;
-   earth.longitudeOfAscendingNode_Deg = -11.26064;
-   earth.longitudeOfPerihelion_Deg = 102.94719;
-   earth.meanAnomaly_Deg = 357.51716;
+   earth.orbitalInclination = 0.00005;
+   earth.longitudeOfAscendingNode = -11.26064;
+   earth.longitudeOfPerihelion = 102.94719;
+   earth.meanAnomaly = 357.51716;
    earth.period = 365.259636;
 
    Planet mars;
    mars.name = "mars";
-   mars.semiMajorAxis_AU = 1.52366231;
+   mars.semiMajorAxis = 1.52366231;
    mars.eccentricity = 0.09341233;
-   mars.orbitalInclination_Deg = 1.85061;
-   mars.longitudeOfAscendingNode_Deg = 49.57854;
-   mars.longitudeOfPerihelion_Deg = 336.04084;
-   mars.meanAnomaly_Deg = 19.387;
+   mars.orbitalInclination = 1.85061;
+   mars.longitudeOfAscendingNode = 49.57854;
+   mars.longitudeOfPerihelion = 336.04084;
+   mars.meanAnomaly = 19.387;
    mars.period = 686.9957;
 
    Planet jupiter;
    jupiter.name = "jupiter";
-   jupiter.semiMajorAxis_AU = 5.20336301;
+   jupiter.semiMajorAxis = 5.20336301;
    jupiter.eccentricity = 0.04839266;
-   jupiter.orbitalInclination_Deg = 1.30530;
-   jupiter.longitudeOfAscendingNode_Deg = 100.55615;
-   jupiter.longitudeOfPerihelion_Deg = 14.75385;
-   jupiter.meanAnomaly_Deg = 20.020;
+   jupiter.orbitalInclination = 1.30530;
+   jupiter.longitudeOfAscendingNode = 100.55615;
+   jupiter.longitudeOfPerihelion = 14.75385;
+   jupiter.meanAnomaly = 20.020;
    jupiter.period = 11.862;
 
    Planet saturn;
    saturn.name = "saturn";
-   saturn.semiMajorAxis_AU = 9.53707032;
+   saturn.semiMajorAxis = 9.53707032;
    saturn.eccentricity = 0.05415060;
-   saturn.orbitalInclination_Deg = 2.48446;
-   saturn.longitudeOfAscendingNode_Deg = 113.71504;
-   saturn.longitudeOfPerihelion_Deg = 92.43194;
-   saturn.meanAnomaly_Deg = 317.020;
+   saturn.orbitalInclination = 2.48446;
+   saturn.longitudeOfAscendingNode = 113.71504;
+   saturn.longitudeOfPerihelion = 92.43194;
+   saturn.meanAnomaly = 317.020;
    saturn.period = 29.4475;
 
    Planet uranus;
    uranus.name = "uranus";
-   uranus.semiMajorAxis_AU = 19.19126393;
+   uranus.semiMajorAxis = 19.19126393;
    uranus.eccentricity = 0.04716771;
-   uranus.orbitalInclination_Deg = 0.76986;
-   uranus.longitudeOfAscendingNode_Deg = 74.22988;
-   uranus.longitudeOfPerihelion_Deg = 170.96424;
-   uranus.meanAnomaly_Deg = 142.238600;
+   uranus.orbitalInclination = 0.76986;
+   uranus.longitudeOfAscendingNode = 74.22988;
+   uranus.longitudeOfPerihelion = 170.96424;
+   uranus.meanAnomaly = 142.238600;
    uranus.period = 84.011;
 
    Planet neptune;
    neptune.name = "neptune";
-   neptune.semiMajorAxis_AU = 30.06896348;
+   neptune.semiMajorAxis = 30.06896348;
    neptune.eccentricity = 0.00858587;
-   neptune.orbitalInclination_Deg = 1.76917;
-   neptune.longitudeOfAscendingNode_Deg = 131.72169;
-   neptune.longitudeOfPerihelion_Deg = 44.97135;
-   neptune.meanAnomaly_Deg = 259.883;
+   neptune.orbitalInclination = 1.76917;
+   neptune.longitudeOfAscendingNode = 131.72169;
+   neptune.longitudeOfPerihelion = 44.97135;
+   neptune.meanAnomaly = 259.883;
    neptune.period = 164.79;
 
    Planet *planets = new Planet[8]{mercury, venus,  earth,  mars,
@@ -335,8 +333,8 @@ Planet *populatePlanets()
    return planets;
 }
 
-// convert to scalar between 0 and 360 inclusive.
-double normalizeAngle(double scalar)
+// ensure the result is always within the standard circle range
+double normalizeDegrees(double scalar)
 {
    double mod = remainder(scalar, 360);
    if (mod < 0) {
@@ -345,11 +343,11 @@ double normalizeAngle(double scalar)
    return mod;
 }
 
-double getDayNum()
+double calcDaysSinceEpoch()
 {
    const int year = 2024;
    const int month = 9;
-   const int day = 9;
+   const int day = 28;
    const double universalTime = 13.10;
 
    // intentional integer division
@@ -369,18 +367,18 @@ double toRadians(double degrees)
 
 // double radiusVectors[] = {0.0, 0.0, 0.0};
 
-Cord getHeliocentricCords(const Planet &body, int dayNum)
+Cord getHeliocentricCords(const Planet &planet, int daysSinceEpoch)
 {
-   const double diurnalMotion = 360 / body.period;
-   const double normalizedMeanAnomaly_Deg =
-       normalizeAngle(body.meanAnomaly_Deg + diurnalMotion * dayNum);
+   const double diurnalMotion = 360.0 / planet.period;
+   const double normalizedMeanAnomaly =
+       normalizeDegrees(planet.meanAnomaly + diurnalMotion * daysSinceEpoch);
 
-   const double a = body.semiMajorAxis_AU;
-   const double e = body.eccentricity;
-   const double M = toRadians(normalizedMeanAnomaly_Deg);
-   const double o = toRadians(body.longitudeOfAscendingNode_Deg);
-   const double p = toRadians(body.longitudeOfPerihelion_Deg);
-   const double i = toRadians(body.orbitalInclination_Deg);
+   const double a = planet.semiMajorAxis;
+   const double e = planet.eccentricity;
+   const double M = toRadians(normalizedMeanAnomaly);
+   const double o = toRadians(planet.longitudeOfAscendingNode);
+   const double p = toRadians(planet.longitudeOfPerihelion);
+   const double i = toRadians(planet.orbitalInclination);
 
    // Initial approximation of Eccentric Anomaly (E) using Kepler's equation
    double E = M + e * sin(M) * (1 + e * cos(M));
@@ -408,35 +406,35 @@ Cord getHeliocentricCords(const Planet &body, int dayNum)
        r * (sin(o) * cos(v + p - o) + cos(o) * sin(v + p - o) * cos(i));
    const double z = r * (sin(v + p - o) * sin(i));
 
-   cout << "From sun (AU) " << body.name << ": " << r << endl;
-
    return {x, y, z};
 }
 
-void addWaypoint(const Planet *&planets, const Input &input, Result &result)
+Waypoint createWaypoint(const Planet *&planets)
 {
-   double years = 0;
    string totalTimeAsString = "";
 
    const size_t planetIndex = getPlanetIndex();
-   const int velocity = getVelocity();
-
-   const double dayNum = getDayNum();
-
    const Planet planet = planets[planetIndex];
-   const Cord heliocentricCord = getHeliocentricCords(planet, dayNum);
-   const Cord heliocentricCordEarth = getHeliocentricCords(planets[2], dayNum);
+
+   const double daysSinceEpoch = calcDaysSinceEpoch();
+
+   const Cord heliocentricCord = getHeliocentricCords(planet, daysSinceEpoch);
+   const Cord heliocentricCordEarth =
+       getHeliocentricCords(planets[2], daysSinceEpoch);
 
    const double gX = heliocentricCordEarth.x - heliocentricCord.x;
    const double gY = heliocentricCordEarth.y - heliocentricCord.y;
    const double gZ = heliocentricCordEarth.z - heliocentricCord.z;
 
-   result.geocentricDistance = sqrt(pow(gX, 2) + pow(gY, 2) + pow(gZ, 2));
+   const double velocity = getVelocity();
+   const double distance = sqrt(pow(gX, 2) + pow(gY, 2) + pow(gZ, 2));
 
-   calcYears(input, result);
+   const double years = calcYears(distance, velocity);
+
    totalTimeAsString = formatTimeResult("Travel time", years);
-
    print(totalTimeAsString);
+
+   return {planet.name, velocity, distance, years};
 }
 
 int main()
@@ -446,8 +444,7 @@ int main()
    size_t indexMax = 10;
 
    const Planet *planets = populatePlanets();
-   Input *inputs = new Input[indexMax];
-   Result *results = new Result[indexMax];
+   Waypoint *waypoints = new Waypoint[indexMax];
 
    print("Planet Trip Calculator");
 
@@ -458,20 +455,18 @@ int main()
       if (menuChoice == ADD_WAYPOINT) {
 
          if (indexInput == indexMax) {
-            expandArray<Input>(inputs, indexMax);
-            expandArray<Result>(results, indexMax);
+            expandArray<Waypoint>(waypoints, indexMax);
          }
 
-         addWaypoint(planets, inputs[indexInput], results[indexInput]);
-
+         waypoints[indexInput] = createWaypoint(planets);
          indexInput += 1;
       }
       else if (menuChoice == HISTORY) {
 
-         printHistory(inputs, results, indexInput);
+         printHistory(waypoints, indexInput);
       }
       else if (menuChoice == TOTAL) {
-         double totalTime = calcTotalTime(inputs, results);
+         double totalTime = calcTotalTime(waypoints);
          string totalTimeAsString = formatTimeResult("Total time", totalTime);
 
          print(totalTimeAsString);
@@ -480,9 +475,9 @@ int main()
    } while (menuChoice != QUIT);
 
    delete[] planets;
-   delete[] results;
+   delete[] waypoints;
    planets = nullptr;
-   results = nullptr;
+   waypoints = nullptr;
 
    print("\nEnd program.");
 
