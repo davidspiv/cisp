@@ -37,6 +37,7 @@ struct Cord {
 };
 
 struct Waypoint {
+   string date;
    string name;
    double velocity;
    double geocentricDistance;
@@ -143,6 +144,25 @@ int getVelocity()
    }
 
    return velocityAsMph;
+}
+
+string getDate()
+{
+   string date;
+   bool isFormatted = false;
+
+   do {
+      date = getString("Enter a date (MM/DD/YYYY): ");
+      if (date.length() != 10 && isdigit(date[0]) && isdigit(date[1]) &&
+          isdigit(date[3]) && isdigit(date[4]) && isdigit(date[6]) &&
+          isdigit(date[7]) && isdigit(date[8]) && isdigit(date[9])) {
+         isFormatted = true;
+      }
+
+
+   } while (isFormatted);
+
+   return date;
 }
 
 double calcYears(double distanceAsAU, double velocityAsMph)
@@ -341,11 +361,11 @@ double normalizeDegrees(double scalar)
    return mod;
 }
 
-double calcDaysSinceEpoch()
+double calcDaysSinceEpoch(const string &date)
 {
-   const int year = 2024;
-   const int month = 9;
-   const int day = 28;
+   const int year = stoi(date.substr(date.length() - 4));
+   const int month = stoi(date.substr(0, 2));
+   const int day = stoi(date.substr(4, 2));
 
    // intentional integer division
    double totalDays = 367 * year - 7 * (year + (month + 9) / 12) / 4 -
@@ -413,10 +433,11 @@ Waypoint createWaypoint(const Planet *&planets)
 {
    string totalTimeAsString = "";
 
+   const string date = getDate();
    const size_t planetIndex = getPlanetIndex();
    const Planet planet = planets[planetIndex];
 
-   const double daysSinceEpoch = calcDaysSinceEpoch();
+   const double daysSinceEpoch = calcDaysSinceEpoch(date);
 
    const Cord heliocentricCord = getHeliocentricCords(planet, daysSinceEpoch);
    const Cord heliocentricCordEarth =
@@ -434,7 +455,7 @@ Waypoint createWaypoint(const Planet *&planets)
    totalTimeAsString = formatTimeResult("Travel time", years);
    print(totalTimeAsString);
 
-   return {planet.name, velocity, distance, years};
+   return {date, planet.name, velocity, distance, years};
 }
 
 int main()
