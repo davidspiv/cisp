@@ -27,7 +27,7 @@ struct Planet {
    double longitudeOfAscendingNode;
    double longitudeOfPerihelion;
    double meanAnomaly;
-   double period;
+   double orbitalPeriod;
 };
 
 struct Cord {
@@ -84,8 +84,8 @@ int getMenuChoice()
 
 string toLowercase(string input)
 {
-   for (size_t charIndex = 0; charIndex < input.length(); charIndex += 1) {
-      input[charIndex] = tolower(input[charIndex]);
+   for (char &character : input) {
+      character = tolower(character);
    }
 
    return input;
@@ -128,7 +128,7 @@ size_t getPlanetIndex()
       else {
          print("Planet must be within our solar system.");
       }
-   } while (planetIndex < 0);
+   } while (planetIndex == -1);
 
    return planetIndex;
 }
@@ -174,7 +174,7 @@ template <typename T> void expandArray(T *&arr, size_t &indexMax)
    indexMax += step;
 }
 
-void printHistory(Waypoint *&waypoints, size_t numInputs)
+void printHistory(const Waypoint *waypoints, size_t numInputs)
 {
    cout << endl
         << setw(8) << left << "Planet" << setw(15) << "Distance (AU)"
@@ -185,8 +185,8 @@ void printHistory(Waypoint *&waypoints, size_t numInputs)
    for (size_t i = 0; i < numInputs; i++) {
 
       cout << setw(8) << left << waypoints[i].name << setw(15)
-           << to_string(waypoints[i].geocentricDistance) << setw(10)
-           << to_string(waypoints[i].timeAsYears) << endl;
+           << waypoints[i].geocentricDistance << setw(10)
+           << waypoints[i].timeAsYears << endl;
    }
 }
 
@@ -238,9 +238,7 @@ string formatTimeResult(const string &label, double years)
       formattedTime += formatDouble(years) + " years";
    }
 
-   for (size_t i = 0; i < formattedTime.length(); i += 1) {
-      resultBorder += "-";
-   }
+   resultBorder = string(formattedTime.length(), '-');
 
    return "\n" + resultBorder + "\n" + formattedTime + "\n" + resultBorder;
 }
@@ -255,7 +253,7 @@ Planet *populatePlanets()
    mercury.longitudeOfAscendingNode = 48.33167;
    mercury.longitudeOfPerihelion = 77.45645;
    mercury.meanAnomaly = 174.796;
-   mercury.period = 87.969;
+   mercury.orbitalPeriod = 87.969;
 
    Planet venus;
    venus.name = "venus";
@@ -265,7 +263,7 @@ Planet *populatePlanets()
    venus.longitudeOfAscendingNode = 76.68069;
    venus.longitudeOfPerihelion = 131.53298;
    venus.meanAnomaly = 50.45;
-   venus.period = 224.7008;
+   venus.orbitalPeriod = 224.7008;
 
    Planet earth;
    earth.name = "earth";
@@ -275,7 +273,7 @@ Planet *populatePlanets()
    earth.longitudeOfAscendingNode = -11.26064;
    earth.longitudeOfPerihelion = 102.94719;
    earth.meanAnomaly = 357.51716;
-   earth.period = 365.259636;
+   earth.orbitalPeriod = 365.259636;
 
    Planet mars;
    mars.name = "mars";
@@ -285,7 +283,7 @@ Planet *populatePlanets()
    mars.longitudeOfAscendingNode = 49.57854;
    mars.longitudeOfPerihelion = 336.04084;
    mars.meanAnomaly = 19.387;
-   mars.period = 686.9957;
+   mars.orbitalPeriod = 686.9957;
 
    Planet jupiter;
    jupiter.name = "jupiter";
@@ -295,7 +293,7 @@ Planet *populatePlanets()
    jupiter.longitudeOfAscendingNode = 100.55615;
    jupiter.longitudeOfPerihelion = 14.75385;
    jupiter.meanAnomaly = 20.020;
-   jupiter.period = 11.862;
+   jupiter.orbitalPeriod = 11.862;
 
    Planet saturn;
    saturn.name = "saturn";
@@ -305,7 +303,7 @@ Planet *populatePlanets()
    saturn.longitudeOfAscendingNode = 113.71504;
    saturn.longitudeOfPerihelion = 92.43194;
    saturn.meanAnomaly = 317.020;
-   saturn.period = 29.4475;
+   saturn.orbitalPeriod = 29.4475;
 
    Planet uranus;
    uranus.name = "uranus";
@@ -315,7 +313,7 @@ Planet *populatePlanets()
    uranus.longitudeOfAscendingNode = 74.22988;
    uranus.longitudeOfPerihelion = 170.96424;
    uranus.meanAnomaly = 142.238600;
-   uranus.period = 84.011;
+   uranus.orbitalPeriod = 84.011;
 
    Planet neptune;
    neptune.name = "neptune";
@@ -325,7 +323,7 @@ Planet *populatePlanets()
    neptune.longitudeOfAscendingNode = 131.72169;
    neptune.longitudeOfPerihelion = 44.97135;
    neptune.meanAnomaly = 259.883;
-   neptune.period = 164.79;
+   neptune.orbitalPeriod = 164.79;
 
    Planet *planets = new Planet[8]{mercury, venus,  earth,  mars,
                                    jupiter, saturn, uranus, neptune};
@@ -348,16 +346,13 @@ double calcDaysSinceEpoch()
    const int year = 2024;
    const int month = 9;
    const int day = 28;
-   const double universalTime = 13.10;
 
    // intentional integer division
-   double totDays = 367 * year - 7 * (year + (month + 9) / 12) / 4 -
-                    3 * ((year + (month - 9) / 7) / 100 + 1) / 4 +
-                    275 * month / 9 + day - 730515;
+   double totalDays = 367 * year - 7 * (year + (month + 9) / 12) / 4 -
+                      3 * ((year + (month - 9) / 7) / 100 + 1) / 4 +
+                      275 * month / 9 + day - 730515;
 
-   totDays -= universalTime / 24.0;
-
-   return totDays;
+   return totalDays;
 }
 
 double toRadians(double degrees)
@@ -365,11 +360,10 @@ double toRadians(double degrees)
    return degrees * (M_PI / 180.0);
 }
 
-// double radiusVectors[] = {0.0, 0.0, 0.0};
-
 Cord getHeliocentricCords(const Planet &planet, int daysSinceEpoch)
 {
-   const double diurnalMotion = 360.0 / planet.period;
+   const double diurnalMotion = 360.0 / planet.orbitalPeriod;
+
    const double normalizedMeanAnomaly =
        normalizeDegrees(planet.meanAnomaly + diurnalMotion * daysSinceEpoch);
 
@@ -380,26 +374,32 @@ Cord getHeliocentricCords(const Planet &planet, int daysSinceEpoch)
    const double p = toRadians(planet.longitudeOfPerihelion);
    const double i = toRadians(planet.orbitalInclination);
 
-   // Initial approximation of Eccentric Anomaly (E) using Kepler's equation
+   // Initial approximation of Eccentric Anomaly (E) using Kepler's equation.
    double E = M + e * sin(M) * (1 + e * cos(M));
    double delta;
 
-   // Iteratively solve for E using Newton-Raphson method
+   // Refine E with Newton-Raphson method. This method will not work with
+   // parabolic or near-parabolic orbits (when the eccentricity is close to 1).
    do {
       const double E1 = E - (E - e * sin(E) - M) / (1 - e * cos(E));
       delta = abs(E1 - E);
       E = E1;
    } while (delta >= 0.0001);
 
-   // Compute the position in orbit plane
+   // compute position in orbital plane
    const double xv = a * (cos(E) - e);
    const double yv = a * (sqrt(1.0 - e * e) * sin(E));
 
-   // Calculate trueAnomaly (v) and radius vector (r)
+   // The True Anomaly (v) is the final angle we need to define the position
+   // of a satellite in orbit, the other two being Eccentric Anomaly (E) and
+   // Mean Anomaly (M).
    const double v = atan2(yv, xv);
+
+   // The radius vector (r) is the distance of the satellite to the focal point
+   // of the ellipse, in this case the sun.
    const double r = sqrt(xv * xv + yv * yv);
 
-   // Convert to 3D coordinates in space
+   // compute heliocentric cartesian coordinates
    const double x =
        r * (cos(o) * cos(v + p - o) - sin(o) * sin(v + p - o) * cos(i));
    const double y =
