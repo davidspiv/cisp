@@ -96,7 +96,6 @@ size_t getPlanetIndex()
 {
    string name = "";
    double planetIndex = -1;
-   cout << endl;
 
    do {
       name = getString("Enter a planet in our solar system: ");
@@ -153,14 +152,17 @@ string getDate()
 
    do {
       date = getString("Enter a date (MM/DD/YYYY): ");
-      if (date.length() != 10 && isdigit(date[0]) && isdigit(date[1]) &&
+      if (date.length() == 10 && isdigit(date[0]) && isdigit(date[1]) &&
           isdigit(date[3]) && isdigit(date[4]) && isdigit(date[6]) &&
           isdigit(date[7]) && isdigit(date[8]) && isdigit(date[9])) {
          isFormatted = true;
       }
+      else {
+         print("Date formatted incorrectly, try again");
+      }
 
 
-   } while (isFormatted);
+   } while (!isFormatted);
 
    return date;
 }
@@ -197,16 +199,16 @@ template <typename T> void expandArray(T *&arr, size_t &indexMax)
 void printHistory(const Waypoint *waypoints, size_t numInputs)
 {
    cout << endl
-        << setw(8) << left << "Planet" << setw(15) << "Distance (AU)"
-        << setw(10) << "Time (yrs)" << endl;
-   cout << setw(8) << left << "------" << setw(15) << "-------------"
-        << setw(10) << "----------" << endl;
+        << setw(12) << left << "Date" << setw(8) << "Planet" << setw(15)
+        << "Distance (AU)" << setw(10) << "Time (yrs)" << endl;
+   cout << setw(12) << left << "----" << setw(8) << "------" << setw(15)
+        << "-------------" << setw(10) << "----------" << endl;
 
    for (size_t i = 0; i < numInputs; i++) {
 
-      cout << setw(8) << left << waypoints[i].name << setw(15)
-           << waypoints[i].geocentricDistance << setw(10)
-           << waypoints[i].timeAsYears << endl;
+      cout << setw(12) << left << waypoints[i].date << setw(8)
+           << waypoints[i].name << setw(15) << waypoints[i].geocentricDistance
+           << setw(12) << waypoints[i].timeAsYears << endl;
    }
 }
 
@@ -365,7 +367,7 @@ double calcDaysSinceEpoch(const string &date)
 {
    const int year = stoi(date.substr(date.length() - 4));
    const int month = stoi(date.substr(0, 2));
-   const int day = stoi(date.substr(4, 2));
+   const int day = stoi(date.substr(3, 2));
 
    // intentional integer division
    double totalDays = 367 * year - 7 * (year + (month + 9) / 12) / 4 -
@@ -432,6 +434,8 @@ Cord getHeliocentricCords(const Planet &planet, int daysSinceEpoch)
 Waypoint createWaypoint(const Planet *&planets)
 {
    string totalTimeAsString = "";
+
+   cout << endl;
 
    const string date = getDate();
    const size_t planetIndex = getPlanetIndex();
