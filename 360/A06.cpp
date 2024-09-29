@@ -1,14 +1,9 @@
 /******************************************************************************
 # Author:           David Spivack
 # Assignment:       Assignment 6
-# Date:             9/27/24
-# Description:      Calculate the time scalar to celestial bodies via three
-#                   user inputs: a celestial planet,
-#                   and a speed in miles per hour. Show sum of time scalars for
-#                   all waypoints entered during runtime.
-# Sources:          Assignment 3 specifications
-#                   planet planets are relative to the current date and were
-#                   sourced from NASA 9/9/24, 9028.83 days since J2000 epoch
+# Date:             9/29/24
+# Description:
+# Sources:          Assignment 6 specifications
 #******************************************************************************/
 
 #include "valid.h"
@@ -38,7 +33,7 @@ struct Cord {
 
 struct Waypoint {
    string date;
-   string name;
+   string planetName;
    double velocity;
    double geocentricDistance;
    double timeAsYears;
@@ -49,7 +44,7 @@ string toLowercase(string input);
 template <typename T> void expandArray(T *&arr, size_t &maxInputs);
 double normalizeDegrees(double scalar);
 double toRadians(double degrees);
-double calcDaysSinceEpoch(const string &date);
+int calcDaysSinceEpoch(const string &date);
 string formatDouble(double yearsAsDouble);
 string formatTimeResult(const string &label, double years);
 
@@ -69,7 +64,7 @@ double calcYears(double distanceAsAU, double velocityAsMph);
 double calcTotalTime(Waypoint *&waypoints);
 double calcNormalizedMeanAnomaly(const Planet &planet, const string &date);
 double calcEccentricAnomaly(double eccentricity, double normalizedMeanAnomaly);
-Cord getHeliocentricCord(const Planet &planet, const string &date);
+Cord calcHeliocentricCord(const Planet &planet, const string &date);
 Waypoint createWaypoint(const Planet *&planets);
 
 int main()
@@ -121,6 +116,10 @@ int main()
    return 0;
 }
 
+
+// toLowercase() will transform any uppercase letter to lowercase
+// Pre: input must be string
+// Post: input is returned as an all lowercase string
 string toLowercase(string input)
 {
    for (char &character : input) {
@@ -130,54 +129,76 @@ string toLowercase(string input)
    return input;
 }
 
+
+// expandArray() allocates a larger but otherwise identical array
+// Pre: arr is a reference int pointer to a dynamically allocated array, size
+// is length of array
+// Post: pointer argument now references larger array
 template <typename T> void expandArray(T *&arr, size_t &maxInputs)
 {
-   const size_t step = 10;
-   T copyArr[maxInputs];
+   const size_t step = 5;
+
+   T *copyArr = new T[maxInputs + step];
 
    for (size_t i = 0; i < maxInputs; i++) {
       copyArr[i] = arr[i];
    }
 
    delete[] arr;
-   arr = new T[maxInputs + step];
-
-   for (size_t i = 0; i < maxInputs; i++) {
-      arr[i] = copyArr[i];
-   }
+   arr = copyArr;
 
    maxInputs += step;
 }
 
-// ensure the result is always within the standard circle range
-double normalizeDegrees(double scalar)
+
+// normalizeDegrees() ensures degrees is within the standard circle range
+// Pre: degrees is double
+// Post: normalizedDegrees is double between 0 and 360
+double normalizeDegrees(double degrees)
 {
-   double mod = remainder(scalar, 360);
-   if (mod < 0) {
-      mod += 360;
+   double normalizedDegrees = remainder(degrees, 360);
+
+   if (normalizedDegrees < 0) {
+      normalizedDegrees += 360;
    }
-   return mod;
+
+   return normalizedDegrees;
 }
 
+
+// toRadians() converts degrees to radians
+// Pre: degrees is double between 0 and 360
+// Post: radians should be in between 0 and 2π
 double toRadians(double degrees)
 {
    return degrees * (M_PI / 180.0);
 }
 
-double calcDaysSinceEpoch(const string &date)
+
+// calcDaysSinceEpoch() finds difference in days between date argument and the
+// J2000 epoch
+// Pre: date is reference string formatted MM/DD/YYYY
+// Post: total days is integer
+
+int calcDaysSinceEpoch(const string &date)
 {
    const int year = stoi(date.substr(date.length() - 4));
    const int month = stoi(date.substr(0, 2));
    const int day = stoi(date.substr(3, 2));
 
    // intentional integer division
-   double totalDays = 367 * year - 7 * (year + (month + 9) / 12) / 4 -
-                      3 * ((year + (month - 9) / 7) / 100 + 1) / 4 +
-                      275 * month / 9 + day - 730515;
+   int totalDays = 367 * year - 7 * (year + (month + 9) / 12) / 4 -
+                   3 * ((year + (month - 9) / 7) / 100 + 1) / 4 +
+                   275 * month / 9 + day - 730515;
 
    return totalDays;
 }
 
+
+// formatDouble() will convert a double to a comma separated value truncated
+// to two decimal places
+// Pre: yearsAsDouble is a double
+// Post: the formatted string is returned
 string formatDouble(double yearsAsDouble)
 {
    string yearsAsString = to_string(yearsAsDouble);
@@ -190,6 +211,11 @@ string formatDouble(double yearsAsDouble)
    return yearsAsString;
 }
 
+
+// formatTimeResult() converts time format if needed and display a border
+// around the output
+// Pre: label and a const string reference, years as a double
+// Post: formattedTimeResult is a string
 string formatTimeResult(const string &label, double years)
 {
    string formattedTime = label + ": ";
@@ -211,11 +237,16 @@ string formatTimeResult(const string &label, double years)
       formattedTime += formatDouble(years) + " years";
    }
 
+   // border should be same length as result
    resultBorder = string(formattedTime.length(), '-');
 
    return "\n" + resultBorder + "\n" + formattedTime + "\n" + resultBorder;
 }
 
+
+// print() outputs value to console
+// Pre: output is a string, carriageReturn is a bool
+// Post: output is printed and output stream buffer flushed
 void print(const string &output, bool carriageReturn)
 {
    if (carriageReturn) {
@@ -225,6 +256,10 @@ void print(const string &output, bool carriageReturn)
    cout << output << flush;
 }
 
+
+// printMenu() shows menu choices that correspond to integer constants
+// Pre: none
+// Post: menu is printed
 void printMenu()
 {
    print(R"(
@@ -234,6 +269,9 @@ void printMenu()
 4. Quit)");
 }
 
+
+// printHistory() loops through data arrays and prints out past inputs and
+// results
 void printHistory(const Waypoint *waypoints, size_t numInputs)
 {
    cout << endl
@@ -245,9 +283,9 @@ void printHistory(const Waypoint *waypoints, size_t numInputs)
    for (size_t i = 0; i < numInputs; i++) {
 
       cout << setw(11) << left << waypoints[i].date << setw(9)
-           << waypoints[i].name << setw(7) << waypoints[i].velocity << setw(9)
-           << waypoints[i].geocentricDistance << waypoints[i].timeAsYears
-           << endl;
+           << waypoints[i].planetName << setw(7) << waypoints[i].velocity
+           << setw(9) << waypoints[i].geocentricDistance
+           << waypoints[i].timeAsYears << endl;
    }
 }
 
@@ -258,6 +296,10 @@ void printTotal(Waypoint *&waypoints)
    print(totalTimeAsString);
 }
 
+
+// getMenuChoice() gets menu option and returns it
+// Pre: none
+// Post: returns integer between 0 and 3 noninclusive
 int getMenuChoice(int maxChoice)
 {
    int menuOption = 0;
@@ -339,6 +381,10 @@ size_t getPlanetIndex()
    return planetIndex;
 }
 
+
+// getVelocity() gets a user input is miles per hour and returns it
+// Pre: none
+// Post: velocityAsMph is an integer greater than 0
 int getVelocity()
 {
    int velocityAsMph = getInteger("Enter miles per hour: ");
@@ -439,6 +485,11 @@ Planet *populatePlanets()
    return planets;
 }
 
+
+// calcYears() will calculate the distance between an origin and a planet,
+// returns the time it takes to get there
+// Pre: distanceAsAU is double, velocityAsMph is double
+// Post: a positive double is returned
 double calcYears(double distanceAsAU, double velocityAsMph)
 {
    const int HOURS_PER_YEAR = 8760;
@@ -449,12 +500,17 @@ double calcYears(double distanceAsAU, double velocityAsMph)
    return distanceAsMiles / velocityAsMph / HOURS_PER_YEAR;
 }
 
+
+// calcTotalTime() loops through the array and calculates each distance
+// value, returning the sum
+// Pre: planets is a Planet struct pointer
+// Post: totalTime is double
 double calcTotalTime(Waypoint *&waypoints)
 {
    int validIndex = 0;
    double totalTime = 0;
 
-   while (waypoints[validIndex].name != "" &&
+   while (waypoints[validIndex].planetName != "" &&
           waypoints[validIndex].velocity != 0) {
 
       totalTime += waypoints[validIndex].timeAsYears;
@@ -466,7 +522,7 @@ double calcTotalTime(Waypoint *&waypoints)
 
 double calcNormalizedMeanAnomaly(const Planet &planet, const string &date)
 {
-   const double daysSinceEpoch = calcDaysSinceEpoch(date);
+   const int daysSinceEpoch = calcDaysSinceEpoch(date);
    const double meanMotion = 360.0 / planet.orbitalPeriod;
    const double M =
        normalizeDegrees(planet.meanAnomaly + meanMotion * daysSinceEpoch);
@@ -504,7 +560,7 @@ double calcEccentricAnomaly(double eccentricity, double normalizedMeanAnomaly)
    return E;
 }
 
-Cord getHeliocentricCord(const Planet &planet, const string &date)
+Cord calcHeliocentricCord(const Planet &planet, const string &date)
 {
    // orbital elements J2000
    const double a = planet.semiMajorAxis;
@@ -548,8 +604,8 @@ Waypoint createWaypoint(const Planet *&planets)
    const Planet planet = planets[planetIndex];
    const Planet earth = planets[2];
 
-   const Cord heliocentricCord = getHeliocentricCord(planet, date);
-   const Cord heliocentricCordEarth = getHeliocentricCord(earth, date);
+   const Cord heliocentricCord = calcHeliocentricCord(planet, date);
+   const Cord heliocentricCordEarth = calcHeliocentricCord(earth, date);
 
    const double gX = heliocentricCordEarth.x - heliocentricCord.x;
    const double gY = heliocentricCordEarth.y - heliocentricCord.y;

@@ -174,7 +174,6 @@ string toLowercase(string input)
 
 // getPlanet() matches a user input with a list of celestial bodies, returns a
 // Planet struct with a name and a distance from earth associated with each
-// body
 // with each body
 // Pre: none
 // Post: planetDistance is a Planet struct
