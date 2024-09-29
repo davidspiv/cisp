@@ -342,11 +342,10 @@ string getDate()
 
 size_t getPlanetIndex()
 {
-   string name = "";
    double planetIndex = -1;
 
    do {
-      name = getString("Enter a planet in our solar system: ");
+      string name = getString("Enter a planet in our solar system: ");
       name = toLowercase(name);
 
       if (name.length() > 10) {
@@ -520,20 +519,10 @@ double calcTotalTime(Waypoint *&waypoints)
    return totalTime;
 }
 
-double calcNormalizedMeanAnomaly(const Planet &planet, const string &date)
-{
-   const int daysSinceEpoch = calcDaysSinceEpoch(date);
-   const double meanMotion = 360.0 / planet.orbitalPeriod;
-   const double M =
-       normalizeDegrees(planet.meanAnomaly + meanMotion * daysSinceEpoch);
-
-   return toRadians(M);
-}
-
 // Numerical approximation of the inverse of Kepler's equation using the
 // Newton-Raphson method. Will only work with elliptic orbits (i.e. the
 // eccentricity is NOT near 1). We should be able to find the root of the
-// function within 4-5 digits of accuracy with 17-18 iterations.
+// function within 4-5 digits of accuracy with a max of 17-18 iterations.
 double calcEccentricAnomaly(double eccentricity, double normalizedMeanAnomaly)
 {
    const double e = eccentricity;
@@ -562,6 +551,11 @@ double calcEccentricAnomaly(double eccentricity, double normalizedMeanAnomaly)
 
 Cord calcHeliocentricCord(const Planet &planet, const string &date)
 {
+   const int daysSinceEpoch = calcDaysSinceEpoch(date);
+   const double meanMotion = 360.0 / planet.orbitalPeriod;
+   const double normalizedMeanAnomaly =
+       normalizeDegrees(planet.meanAnomaly + meanMotion * daysSinceEpoch);
+
    // orbital elements J2000
    const double a = planet.semiMajorAxis;
    const double e = planet.eccentricity;
@@ -569,8 +563,8 @@ Cord calcHeliocentricCord(const Planet &planet, const string &date)
    const double p = toRadians(planet.longitudeOfPerihelion);
    const double i = toRadians(planet.orbitalInclination);
 
-   // normalized to specified date
-   const double M = calcNormalizedMeanAnomaly(planet, date);
+   // normalized from J2000 epoch to specified date
+   const double M = toRadians(normalizedMeanAnomaly);
    const double E = calcEccentricAnomaly(e, M);
 
    // position in 2d orbital plane
@@ -587,19 +581,20 @@ Cord calcHeliocentricCord(const Planet &planet, const string &date)
    const double r = sqrt(xv * xv + yv * yv);
 
    // heliocentric 3d cartesian coordinates
-   const double x =
+   const double xh =
        r * (cos(o) * cos(v + p - o) - sin(o) * sin(v + p - o) * cos(i));
-   const double y =
+   const double yh =
        r * (sin(o) * cos(v + p - o) + cos(o) * sin(v + p - o) * cos(i));
-   const double z = r * (sin(v + p - o) * sin(i));
+   const double zh = r * (sin(v + p - o) * sin(i));
 
-   return {x, y, z};
+   return {xh, yh, zh};
 }
 
 Waypoint createWaypoint(const Planet *&planets)
 {
    const string date = getDate();
    const size_t planetIndex = getPlanetIndex();
+   const double velocity = getVelocity();
 
    const Planet planet = planets[planetIndex];
    const Planet earth = planets[2];
@@ -607,13 +602,12 @@ Waypoint createWaypoint(const Planet *&planets)
    const Cord heliocentricCord = calcHeliocentricCord(planet, date);
    const Cord heliocentricCordEarth = calcHeliocentricCord(earth, date);
 
+   // geocentric 3d cartesian coordinates
    const double gX = heliocentricCordEarth.x - heliocentricCord.x;
    const double gY = heliocentricCordEarth.y - heliocentricCord.y;
    const double gZ = heliocentricCordEarth.z - heliocentricCord.z;
 
-   const double velocity = getVelocity();
    const double distance = sqrt(pow(gX, 2) + pow(gY, 2) + pow(gZ, 2));
-
    const double years = calcYears(distance, velocity);
    const string totalTimeAsString = formatTimeResult("Travel time", years);
 
