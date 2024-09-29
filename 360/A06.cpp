@@ -44,10 +44,82 @@ struct Waypoint {
    double timeAsYears;
 };
 
-const int ADD_WAYPOINT = 1;
-const int HISTORY = 2;
-const int TOTAL = 3;
-const int QUIT = 4;
+// Utilities
+string toLowercase(string input);
+template <typename T> void expandArray(T *&arr, size_t &maxInputs);
+double normalizeDegrees(double scalar);
+double toRadians(double degrees);
+double calcDaysSinceEpoch(const string &date);
+string formatDouble(double yearsAsDouble);
+string formatTimeResult(const string &label, double years);
+
+// I/O
+void print(const string &output, bool carriageReturn = 1);
+void printMenu();
+void printHistory(const Waypoint *waypoints, size_t numInputs);
+void printTotal(Waypoint *&waypoints);
+int getMenuChoice(int maxChoice);
+string getDate();
+size_t getPlanetIndex();
+int getVelocity();
+
+// Business
+Planet *populatePlanets();
+double calcYears(double distanceAsAU, double velocityAsMph);
+double calcTotalTime(Waypoint *&waypoints);
+double calcNormalizedMeanAnomaly(const Planet &planet, const string &date);
+double calcEccentricAnomaly(double eccentricity, double normalizedMeanAnomaly);
+Cord getHeliocentricCord(const Planet &planet, const string &date);
+Waypoint createWaypoint(const Planet *&planets);
+
+int main()
+{
+   const int ADD_WAYPOINT = 1;
+   const int HISTORY = 2;
+   const int TOTAL = 3;
+   const int QUIT = 4;
+
+   int menuChoice = 0;
+   size_t numInputs = 0;
+   size_t maxInputs = 10;
+
+   const Planet *planets = populatePlanets();
+   Waypoint *waypoints = new Waypoint[maxInputs];
+
+   print("Planet Trip Calculator");
+
+   do {
+
+      menuChoice = getMenuChoice(QUIT);
+
+      if (menuChoice == ADD_WAYPOINT) {
+
+         if (numInputs == maxInputs) {
+            expandArray<Waypoint>(waypoints, maxInputs);
+         }
+
+         waypoints[numInputs] = createWaypoint(planets);
+         numInputs += 1;
+      }
+      else if (menuChoice == HISTORY) {
+
+         printHistory(waypoints, numInputs);
+      }
+      else if (menuChoice == TOTAL) {
+         printTotal(waypoints);
+      }
+
+   } while (menuChoice != QUIT);
+
+   delete[] planets;
+   delete[] waypoints;
+   planets = nullptr;
+   waypoints = nullptr;
+
+   print("\nEnd program.");
+
+   return 0;
+}
 
 string toLowercase(string input)
 {
@@ -58,23 +130,23 @@ string toLowercase(string input)
    return input;
 }
 
-template <typename T> void expandArray(T *&arr, size_t &indexMax)
+template <typename T> void expandArray(T *&arr, size_t &maxInputs)
 {
    const size_t step = 10;
-   T copyArr[indexMax];
+   T copyArr[maxInputs];
 
-   for (size_t i = 0; i < indexMax; i++) {
+   for (size_t i = 0; i < maxInputs; i++) {
       copyArr[i] = arr[i];
    }
 
    delete[] arr;
-   arr = new T[indexMax + step];
+   arr = new T[maxInputs + step];
 
-   for (size_t i = 0; i < indexMax; i++) {
+   for (size_t i = 0; i < maxInputs; i++) {
       arr[i] = copyArr[i];
    }
 
-   indexMax += step;
+   maxInputs += step;
 }
 
 // ensure the result is always within the standard circle range
@@ -144,7 +216,7 @@ string formatTimeResult(const string &label, double years)
    return "\n" + resultBorder + "\n" + formattedTime + "\n" + resultBorder;
 }
 
-void print(const string &output, bool carriageReturn = 1)
+void print(const string &output, bool carriageReturn)
 {
    if (carriageReturn) {
       cout << output << endl;
@@ -179,14 +251,21 @@ void printHistory(const Waypoint *waypoints, size_t numInputs)
    }
 }
 
-int getMenuChoice()
+void printTotal(Waypoint *&waypoints)
+{
+   double totalTime = calcTotalTime(waypoints);
+   string totalTimeAsString = formatTimeResult("Total time", totalTime);
+   print(totalTimeAsString);
+}
+
+int getMenuChoice(int maxChoice)
 {
    int menuOption = 0;
 
    printMenu();
    menuOption = getInteger("Choose option: ");
 
-   while (menuOption <= 0 || menuOption > QUIT) {
+   while (menuOption <= 0 || menuOption > maxChoice) {
       print("Must choose number from menu options.");
       printMenu();
       menuOption = getInteger("Choose option: ");
@@ -199,6 +278,8 @@ string getDate()
 {
    string date;
    bool isFormatted = false;
+
+   cout << endl;
 
    do {
       date = getString("Enter a date (MM/DD/YYYY): ");
@@ -383,39 +464,60 @@ double calcTotalTime(Waypoint *&waypoints)
    return totalTime;
 }
 
-Cord getHeliocentricCords(const Planet &planet, int daysSinceEpoch)
+double calcNormalizedMeanAnomaly(const Planet &planet, const string &date)
 {
-   const double diurnalMotion = 360.0 / planet.orbitalPeriod;
+   const double daysSinceEpoch = calcDaysSinceEpoch(date);
+   const double meanMotion = 360.0 / planet.orbitalPeriod;
+   const double M =
+       normalizeDegrees(planet.meanAnomaly + meanMotion * daysSinceEpoch);
 
-   const double normalizedMeanAnomaly =
-       normalizeDegrees(planet.meanAnomaly + diurnalMotion * daysSinceEpoch);
+   return toRadians(M);
+}
 
-   const double a = planet.semiMajorAxis;
-   const double e = planet.eccentricity;
-   const double M = toRadians(normalizedMeanAnomaly);
-   const double o = toRadians(planet.longitudeOfAscendingNode);
-   const double p = toRadians(planet.longitudeOfPerihelion);
-   const double i = toRadians(planet.orbitalInclination);
+// Numerical approximation of the inverse of Kepler's equation using the
+// Newton-Raphson method. Will only work with elliptic orbits (i.e. the
+// eccentricity is NOT near 1). We should be able to find the root of the
+// function within 4-5 digits of accuracy with 17-18 iterations.
+double calcEccentricAnomaly(double eccentricity, double normalizedMeanAnomaly)
+{
+   const double e = eccentricity;
+   const double M = normalizedMeanAnomaly;
+   const bool isConverging = [](int iterationCount) {
+      return iterationCount < 19;
+   };
 
-   // Initial approximation of Eccentric Anomaly (E) using Kepler's equation.
    double E = M + e * sin(M) * (1 + e * cos(M));
-
    double delta;
+   int iterationCount = 0;
 
-   // Refine E with Newton-Raphson method. This method will not work with
-   // parabolic or near-parabolic orbits (when the eccentricity is close to 1).
    do {
       const double E1 = E - (E - e * sin(E) - M) / (1 - e * cos(E));
       delta = abs(E1 - E);
       E = E1;
-   } while (delta >= 0.0001);
+      iterationCount++;
+   } while (delta >= 0.0001 && isConverging);
 
-   // is this necessary?
-   if (E > (2 * M_PI) || E < 0) {
-      print("Need to normalize radians!");
+   if (!isConverging) {
+      print("calcEccentricAnomaly() failed. unable to converge");
    }
 
-   // compute position in orbital plane
+   return E;
+}
+
+Cord getHeliocentricCord(const Planet &planet, const string &date)
+{
+   // orbital elements J2000
+   const double a = planet.semiMajorAxis;
+   const double e = planet.eccentricity;
+   const double o = toRadians(planet.longitudeOfAscendingNode);
+   const double p = toRadians(planet.longitudeOfPerihelion);
+   const double i = toRadians(planet.orbitalInclination);
+
+   // normalized to specified date
+   const double M = calcNormalizedMeanAnomaly(planet, date);
+   const double E = calcEccentricAnomaly(e, M);
+
+   // position in 2d orbital plane
    const double xv = a * (cos(E) - e);
    const double yv = a * (sqrt(1.0 - e * e) * sin(E));
 
@@ -428,7 +530,7 @@ Cord getHeliocentricCords(const Planet &planet, int daysSinceEpoch)
    // of the ellipse, in this case the sun.
    const double r = sqrt(xv * xv + yv * yv);
 
-   // compute heliocentric cartesian coordinates
+   // heliocentric 3d cartesian coordinates
    const double x =
        r * (cos(o) * cos(v + p - o) - sin(o) * sin(v + p - o) * cos(i));
    const double y =
@@ -440,19 +542,14 @@ Cord getHeliocentricCords(const Planet &planet, int daysSinceEpoch)
 
 Waypoint createWaypoint(const Planet *&planets)
 {
-   string totalTimeAsString = "";
-
-   cout << endl;
-
    const string date = getDate();
    const size_t planetIndex = getPlanetIndex();
+
    const Planet planet = planets[planetIndex];
+   const Planet earth = planets[2];
 
-   const double daysSinceEpoch = calcDaysSinceEpoch(date);
-
-   const Cord heliocentricCord = getHeliocentricCords(planet, daysSinceEpoch);
-   const Cord heliocentricCordEarth =
-       getHeliocentricCords(planets[2], daysSinceEpoch);
+   const Cord heliocentricCord = getHeliocentricCord(planet, date);
+   const Cord heliocentricCordEarth = getHeliocentricCord(earth, date);
 
    const double gX = heliocentricCordEarth.x - heliocentricCord.x;
    const double gY = heliocentricCordEarth.y - heliocentricCord.y;
@@ -462,56 +559,9 @@ Waypoint createWaypoint(const Planet *&planets)
    const double distance = sqrt(pow(gX, 2) + pow(gY, 2) + pow(gZ, 2));
 
    const double years = calcYears(distance, velocity);
+   const string totalTimeAsString = formatTimeResult("Travel time", years);
 
-   totalTimeAsString = formatTimeResult("Travel time", years);
    print(totalTimeAsString);
 
    return {date, planet.name, velocity, distance, years};
-}
-
-int main()
-{
-   int menuChoice = 0;
-   size_t indexInput = 0;
-   size_t indexMax = 10;
-
-   const Planet *planets = populatePlanets();
-   Waypoint *waypoints = new Waypoint[indexMax];
-
-   print("Planet Trip Calculator");
-
-   do {
-
-      menuChoice = getMenuChoice();
-
-      if (menuChoice == ADD_WAYPOINT) {
-
-         if (indexInput == indexMax) {
-            expandArray<Waypoint>(waypoints, indexMax);
-         }
-
-         waypoints[indexInput] = createWaypoint(planets);
-         indexInput += 1;
-      }
-      else if (menuChoice == HISTORY) {
-
-         printHistory(waypoints, indexInput);
-      }
-      else if (menuChoice == TOTAL) {
-         double totalTime = calcTotalTime(waypoints);
-         string totalTimeAsString = formatTimeResult("Total time", totalTime);
-
-         print(totalTimeAsString);
-      }
-
-   } while (menuChoice != QUIT);
-
-   delete[] planets;
-   delete[] waypoints;
-   planets = nullptr;
-   waypoints = nullptr;
-
-   print("\nEnd program.");
-
-   return 0;
 }
