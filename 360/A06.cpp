@@ -49,6 +49,101 @@ const int HISTORY = 2;
 const int TOTAL = 3;
 const int QUIT = 4;
 
+string toLowercase(string input)
+{
+   for (char &character : input) {
+      character = tolower(character);
+   }
+
+   return input;
+}
+
+template <typename T> void expandArray(T *&arr, size_t &indexMax)
+{
+   const size_t step = 10;
+   T copyArr[indexMax];
+
+   for (size_t i = 0; i < indexMax; i++) {
+      copyArr[i] = arr[i];
+   }
+
+   delete[] arr;
+   arr = new T[indexMax + step];
+
+   for (size_t i = 0; i < indexMax; i++) {
+      arr[i] = copyArr[i];
+   }
+
+   indexMax += step;
+}
+
+// ensure the result is always within the standard circle range
+double normalizeDegrees(double scalar)
+{
+   double mod = remainder(scalar, 360);
+   if (mod < 0) {
+      mod += 360;
+   }
+   return mod;
+}
+
+double toRadians(double degrees)
+{
+   return degrees * (M_PI / 180.0);
+}
+
+double calcDaysSinceEpoch(const string &date)
+{
+   const int year = stoi(date.substr(date.length() - 4));
+   const int month = stoi(date.substr(0, 2));
+   const int day = stoi(date.substr(3, 2));
+
+   // intentional integer division
+   double totalDays = 367 * year - 7 * (year + (month + 9) / 12) / 4 -
+                      3 * ((year + (month - 9) / 7) / 100 + 1) / 4 +
+                      275 * month / 9 + day - 730515;
+
+   return totalDays;
+}
+
+string formatDouble(double yearsAsDouble)
+{
+   string yearsAsString = to_string(yearsAsDouble);
+   yearsAsString = yearsAsString.substr(0, yearsAsString.length() - 4);
+
+   for (int i = yearsAsString.length() - 6; i > 0; i = i - 3) {
+      yearsAsString.insert(i, ",");
+   }
+
+   return yearsAsString;
+}
+
+string formatTimeResult(const string &label, double years)
+{
+   string formattedTime = label + ": ";
+   string resultBorder = "";
+
+   if (years == 0) {
+      formattedTime += "None";
+   }
+   else if (years == 1) {
+      formattedTime += "1 year";
+   }
+   else if (years < 1) {
+      formattedTime += to_string(years) + " of a year";
+   }
+   else if (years > 100000) {
+      formattedTime += formatDouble(years / 1000) + " millennia";
+   }
+   else {
+      formattedTime += formatDouble(years) + " years";
+   }
+
+   resultBorder = string(formattedTime.length(), '-');
+
+   return "\n" + resultBorder + "\n" + formattedTime + "\n" + resultBorder;
+}
+
 void print(const string &output, bool carriageReturn = 1)
 {
    if (carriageReturn) {
@@ -67,6 +162,23 @@ void printMenu()
 4. Quit)");
 }
 
+void printHistory(const Waypoint *waypoints, size_t numInputs)
+{
+   cout << endl
+        << setw(11) << left << "Date" << setw(9) << "Planet" << setw(7)
+        << "MPH" << setw(9) << "AU" << "Years" << endl;
+   cout << setw(11) << left << "----" << setw(9) << "------" << setw(7)
+        << "---" << setw(9) << "--" << "-----" << endl;
+
+   for (size_t i = 0; i < numInputs; i++) {
+
+      cout << setw(11) << left << waypoints[i].date << setw(9)
+           << waypoints[i].name << setw(7) << waypoints[i].velocity << setw(9)
+           << waypoints[i].geocentricDistance << waypoints[i].timeAsYears
+           << endl;
+   }
+}
+
 int getMenuChoice()
 {
    int menuOption = 0;
@@ -83,13 +195,26 @@ int getMenuChoice()
    return menuOption;
 }
 
-string toLowercase(string input)
+string getDate()
 {
-   for (char &character : input) {
-      character = tolower(character);
-   }
+   string date;
+   bool isFormatted = false;
 
-   return input;
+   do {
+      date = getString("Enter a date (MM/DD/YYYY): ");
+      if (date.length() == 10 && isdigit(date[0]) && isdigit(date[1]) &&
+          isdigit(date[3]) && isdigit(date[4]) && isdigit(date[6]) &&
+          isdigit(date[7]) && isdigit(date[8]) && isdigit(date[9])) {
+         isFormatted = true;
+      }
+      else {
+         print("Date formatted incorrectly, try again");
+      }
+
+
+   } while (!isFormatted);
+
+   return date;
 }
 
 size_t getPlanetIndex()
@@ -143,126 +268,6 @@ int getVelocity()
    }
 
    return velocityAsMph;
-}
-
-string getDate()
-{
-   string date;
-   bool isFormatted = false;
-
-   do {
-      date = getString("Enter a date (MM/DD/YYYY): ");
-      if (date.length() == 10 && isdigit(date[0]) && isdigit(date[1]) &&
-          isdigit(date[3]) && isdigit(date[4]) && isdigit(date[6]) &&
-          isdigit(date[7]) && isdigit(date[8]) && isdigit(date[9])) {
-         isFormatted = true;
-      }
-      else {
-         print("Date formatted incorrectly, try again");
-      }
-
-
-   } while (!isFormatted);
-
-   return date;
-}
-
-double calcYears(double distanceAsAU, double velocityAsMph)
-{
-   const int HOURS_PER_YEAR = 8760;
-   const double MILES_PER_AU = 9.296e+7;
-
-   const double distanceAsMiles = distanceAsAU * MILES_PER_AU;
-
-   return distanceAsMiles / velocityAsMph / HOURS_PER_YEAR;
-}
-
-template <typename T> void expandArray(T *&arr, size_t &indexMax)
-{
-   const size_t step = 10;
-   T copyArr[indexMax];
-
-   for (size_t i = 0; i < indexMax; i++) {
-      copyArr[i] = arr[i];
-   }
-
-   delete[] arr;
-   arr = new T[indexMax + step];
-
-   for (size_t i = 0; i < indexMax; i++) {
-      arr[i] = copyArr[i];
-   }
-
-   indexMax += step;
-}
-
-void printHistory(const Waypoint *waypoints, size_t numInputs)
-{
-   cout << endl
-        << setw(12) << left << "Date" << setw(8) << "Planet" << setw(15)
-        << "Distance (AU)" << setw(10) << "Time (yrs)" << endl;
-   cout << setw(12) << left << "----" << setw(8) << "------" << setw(15)
-        << "-------------" << setw(10) << "----------" << endl;
-
-   for (size_t i = 0; i < numInputs; i++) {
-
-      cout << setw(12) << left << waypoints[i].date << setw(8)
-           << waypoints[i].name << setw(15) << waypoints[i].geocentricDistance
-           << setw(12) << waypoints[i].timeAsYears << endl;
-   }
-}
-
-double calcTotalTime(Waypoint *&waypoints)
-{
-   int validIndex = 0;
-   double totalTime = 0;
-
-   while (waypoints[validIndex].name != "" &&
-          waypoints[validIndex].velocity != 0) {
-
-      totalTime += waypoints[validIndex].timeAsYears;
-      validIndex += 1;
-   }
-
-   return totalTime;
-}
-
-string formatDouble(double yearsAsDouble)
-{
-   string yearsAsString = to_string(yearsAsDouble);
-   yearsAsString = yearsAsString.substr(0, yearsAsString.length() - 4);
-
-   for (int i = yearsAsString.length() - 6; i > 0; i = i - 3) {
-      yearsAsString.insert(i, ",");
-   }
-
-   return yearsAsString;
-}
-
-string formatTimeResult(const string &label, double years)
-{
-   string formattedTime = label + ": ";
-   string resultBorder = "";
-
-   if (years == 0) {
-      formattedTime += "None";
-   }
-   else if (years == 1) {
-      formattedTime += "1 year";
-   }
-   else if (years < 1) {
-      formattedTime += to_string(years) + " of a year";
-   }
-   else if (years > 100000) {
-      formattedTime += formatDouble(years / 1000) + " millennia";
-   }
-   else {
-      formattedTime += formatDouble(years) + " years";
-   }
-
-   resultBorder = string(formattedTime.length(), '-');
-
-   return "\n" + resultBorder + "\n" + formattedTime + "\n" + resultBorder;
 }
 
 Planet *populatePlanets()
@@ -353,33 +358,29 @@ Planet *populatePlanets()
    return planets;
 }
 
-// ensure the result is always within the standard circle range
-double normalizeDegrees(double scalar)
+double calcYears(double distanceAsAU, double velocityAsMph)
 {
-   double mod = remainder(scalar, 360);
-   if (mod < 0) {
-      mod += 360;
+   const int HOURS_PER_YEAR = 8760;
+   const double MILES_PER_AU = 9.296e+7;
+
+   const double distanceAsMiles = distanceAsAU * MILES_PER_AU;
+
+   return distanceAsMiles / velocityAsMph / HOURS_PER_YEAR;
+}
+
+double calcTotalTime(Waypoint *&waypoints)
+{
+   int validIndex = 0;
+   double totalTime = 0;
+
+   while (waypoints[validIndex].name != "" &&
+          waypoints[validIndex].velocity != 0) {
+
+      totalTime += waypoints[validIndex].timeAsYears;
+      validIndex += 1;
    }
-   return mod;
-}
 
-double calcDaysSinceEpoch(const string &date)
-{
-   const int year = stoi(date.substr(date.length() - 4));
-   const int month = stoi(date.substr(0, 2));
-   const int day = stoi(date.substr(3, 2));
-
-   // intentional integer division
-   double totalDays = 367 * year - 7 * (year + (month + 9) / 12) / 4 -
-                      3 * ((year + (month - 9) / 7) / 100 + 1) / 4 +
-                      275 * month / 9 + day - 730515;
-
-   return totalDays;
-}
-
-double toRadians(double degrees)
-{
-   return degrees * (M_PI / 180.0);
+   return totalTime;
 }
 
 Cord getHeliocentricCords(const Planet &planet, int daysSinceEpoch)
@@ -398,6 +399,7 @@ Cord getHeliocentricCords(const Planet &planet, int daysSinceEpoch)
 
    // Initial approximation of Eccentric Anomaly (E) using Kepler's equation.
    double E = M + e * sin(M) * (1 + e * cos(M));
+
    double delta;
 
    // Refine E with Newton-Raphson method. This method will not work with
@@ -407,6 +409,11 @@ Cord getHeliocentricCords(const Planet &planet, int daysSinceEpoch)
       delta = abs(E1 - E);
       E = E1;
    } while (delta >= 0.0001);
+
+   // is this necessary?
+   if (E > (2 * M_PI) || E < 0) {
+      print("Need to normalize radians!");
+   }
 
    // compute position in orbital plane
    const double xv = a * (cos(E) - e);
