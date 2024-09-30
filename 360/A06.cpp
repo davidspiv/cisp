@@ -4,6 +4,18 @@
 # Date:             9/29/24
 # Description:
 # Sources:          Assignment 6 specifications
+#
+#                   Computing the position of the planets in the sky:
+#                   https://stjarnhimlen.se/comp/ppcomp.html
+#                   http://www.stargazing.net/kepler/ellipse.html
+#                   https://jtauber.github.io/orbits/
+#
+#                   Orbital elements data:
+#                   https://nssdc.gsfc.nasa.gov/planetary/factsheet/
+#
+#                   Verifying results:
+#                   https://www.heavens-above.com/planets.aspx
+#                   https://marsclock.com/
 #******************************************************************************/
 
 #include "valid.h"
@@ -14,6 +26,13 @@
 
 using namespace std;
 
+// The Planet struct encompasses orbital elements; the information needed to
+// define a position of a planet in orbit. These parameters specify the
+// angle of orbit in three dimensions and the position of the planet along that
+// orbit. Measurements are relative to the J2000 epoch (Jan 1, 2000) and/or
+// to the plane of the ecliptic (the imaginary plane containing the Earth's
+// orbit around the Sun) where specified.
+
 struct Planet {
    string name;
    double semiMajorAxis;
@@ -22,8 +41,57 @@ struct Planet {
    double longitudeOfAscendingNode;
    double longitudeOfPerihelion;
    double meanAnomaly;
-   double orbitalPeriod;
+   double period;
 };
+
+// Semi-major Axis: [units: AU] half of the length of the long axis of the
+// ellipse (where AU is an astronomical unit, the mean distance between the
+// Earth and the Sun)
+
+// Eccentricity: [units: N/A] ratio between the focal distance (which is
+// relative to J2000) and the semi-major axis
+
+// Orbital Inclination: [units: degrees] The tilt of the planet's orbit around
+// the sun relative to plane of the ecliptic
+
+// Longitude of Ascending Node: [units: degrees] angular position on plane of
+// the ecliptic relative to J2000
+
+// Longitude of Perihelion: [units: degrees] the point in orbit closest to sun
+// relative to the plane of the ecliptic. All three anomalies (calculated later
+// on) are zero when the planet is in perihelion.
+
+// Mean Anomaly: [units: degrees] the fraction of the period that has elapsed
+// since the planet passed through the perihelion relative to J2000
+
+// Period: [units: days] refers to the time around the sun
+
+// Visualization in 2D - https://shorturl.at/ZL1Cr. Where V = trueAnomaly,
+// E = eccentricAnomaly, B = perihelion, P = planet, and the distance between A
+// and B represents the major axis. The orbital inclination exists in the
+// dimension not shown. NOTE: These variable letters reference the link and do
+// not align with the rest of the program.
+
+// Visualization in 3D - https://shorturl.at/Cvd1K. The plane of reference
+// being the orbital plane of Earth around the sun. The reference direction is
+// referred to as "the first point of Aries". Much like how an epoch is defined
+// on the timeline, it is an arbitrary reference point. It was defined over
+// 2000 years ago by Hipparchus, considered the founder of trigonometry.
+
+// With these measurements, we can account the for position of a planet in
+// space at given a point in time, accurate within a few centuries of the
+// reference epoch.
+
+// There are two main categories of movement NOT accounted for which reduces
+// our accuracy in this step significantly:
+// 1) nutation / precession: changes in the planet's axis of rotation
+// 2) perturbations: forces other than the sun acting on the planet (other
+// satellites). This especially effects the Jovian planets: Saturn, Jupiter,
+// Uranus, and Neptune.
+
+// In addition, we simplify the problem so that all planets "freeze" during
+// travel time. Accounting for the movement of planets during travel time is
+// currently beyond the scope of this project.
 
 struct Cord {
    double x;
@@ -34,7 +102,7 @@ struct Cord {
 struct Waypoint {
    string date;
    string planetName;
-   double velocity;
+   double velocityAsMph;
    double geocentricDistance;
    double timeAsYears;
 };
@@ -56,15 +124,14 @@ void printTotal(Waypoint *&waypoints);
 int getMenuChoice(int maxChoice);
 string getDate();
 size_t getPlanetIndex();
-int getVelocity();
+int getVelocityAsMph();
 
 // Business
 Planet *populatePlanets();
-double calcYears(double distanceAsAU, double velocityAsMph);
+double calcYears(double distanceAsAU, double velocityAsMphAsMph);
 double calcTotalTime(Waypoint *&waypoints);
-double calcNormalizedMeanAnomaly(const Planet &planet, const string &date);
 double calcEccentricAnomaly(double eccentricity, double normalizedMeanAnomaly);
-Cord calcHeliocentricCord(const Planet &planet, const string &date);
+Cord calcHeliocentricCord(const Planet &planet, int daysSinceEpoch);
 Waypoint createWaypoint(const Planet *&planets);
 
 int main()
@@ -179,7 +246,6 @@ double toRadians(double degrees)
 // J2000 epoch
 // Pre: date is reference string formatted MM/DD/YYYY
 // Post: total days is integer
-
 int calcDaysSinceEpoch(const string &date)
 {
    const int year = stoi(date.substr(date.length() - 4));
@@ -283,7 +349,7 @@ void printHistory(const Waypoint *waypoints, size_t numInputs)
    for (size_t i = 0; i < numInputs; i++) {
 
       cout << setw(11) << left << waypoints[i].date << setw(9)
-           << waypoints[i].planetName << setw(7) << waypoints[i].velocity
+           << waypoints[i].planetName << setw(7) << waypoints[i].velocityAsMph
            << setw(9) << waypoints[i].geocentricDistance
            << waypoints[i].timeAsYears << endl;
    }
@@ -381,19 +447,19 @@ size_t getPlanetIndex()
 }
 
 
-// getVelocity() gets a user input is miles per hour and returns it
+// getVelocityAsMph() gets a user input is miles per hour and returns it
 // Pre: none
-// Post: velocityAsMph is an integer greater than 0
-int getVelocity()
+// Post: velocityAsMphAsMph is an integer greater than 0
+int getVelocityAsMph()
 {
-   int velocityAsMph = getInteger("Enter miles per hour: ");
+   int velocityAsMphAsMph = getInteger("Enter miles per hour: ");
 
-   while (velocityAsMph <= 0) {
+   while (velocityAsMphAsMph <= 0) {
       print("Must be greater than 0.");
-      velocityAsMph = getInteger("Enter miles per hour: ");
+      velocityAsMphAsMph = getInteger("Enter miles per hour: ");
    }
 
-   return velocityAsMph;
+   return velocityAsMphAsMph;
 }
 
 Planet *populatePlanets()
@@ -406,7 +472,7 @@ Planet *populatePlanets()
    mercury.longitudeOfAscendingNode = 48.33167;
    mercury.longitudeOfPerihelion = 77.45645;
    mercury.meanAnomaly = 174.796;
-   mercury.orbitalPeriod = 87.969;
+   mercury.period = 87.969;
 
    Planet venus;
    venus.name = "venus";
@@ -416,7 +482,7 @@ Planet *populatePlanets()
    venus.longitudeOfAscendingNode = 76.68069;
    venus.longitudeOfPerihelion = 131.53298;
    venus.meanAnomaly = 50.45;
-   venus.orbitalPeriod = 224.7008;
+   venus.period = 224.7008;
 
    Planet earth;
    earth.name = "earth";
@@ -426,7 +492,7 @@ Planet *populatePlanets()
    earth.longitudeOfAscendingNode = -11.26064;
    earth.longitudeOfPerihelion = 102.94719;
    earth.meanAnomaly = 357.51716;
-   earth.orbitalPeriod = 365.259636;
+   earth.period = 365.259636;
 
    Planet mars;
    mars.name = "mars";
@@ -436,7 +502,7 @@ Planet *populatePlanets()
    mars.longitudeOfAscendingNode = 49.57854;
    mars.longitudeOfPerihelion = 336.04084;
    mars.meanAnomaly = 19.387;
-   mars.orbitalPeriod = 686.9957;
+   mars.period = 686.9957;
 
    Planet jupiter;
    jupiter.name = "jupiter";
@@ -446,7 +512,7 @@ Planet *populatePlanets()
    jupiter.longitudeOfAscendingNode = 100.55615;
    jupiter.longitudeOfPerihelion = 14.75385;
    jupiter.meanAnomaly = 20.020;
-   jupiter.orbitalPeriod = 11.862;
+   jupiter.period = 11.862;
 
    Planet saturn;
    saturn.name = "saturn";
@@ -456,7 +522,7 @@ Planet *populatePlanets()
    saturn.longitudeOfAscendingNode = 113.71504;
    saturn.longitudeOfPerihelion = 92.43194;
    saturn.meanAnomaly = 317.020;
-   saturn.orbitalPeriod = 29.4475;
+   saturn.period = 29.4475;
 
    Planet uranus;
    uranus.name = "uranus";
@@ -466,7 +532,7 @@ Planet *populatePlanets()
    uranus.longitudeOfAscendingNode = 74.22988;
    uranus.longitudeOfPerihelion = 170.96424;
    uranus.meanAnomaly = 142.238600;
-   uranus.orbitalPeriod = 84.011;
+   uranus.period = 84.011;
 
    Planet neptune;
    neptune.name = "neptune";
@@ -476,7 +542,7 @@ Planet *populatePlanets()
    neptune.longitudeOfAscendingNode = 131.72169;
    neptune.longitudeOfPerihelion = 44.97135;
    neptune.meanAnomaly = 259.883;
-   neptune.orbitalPeriod = 164.79;
+   neptune.period = 164.79;
 
    Planet *planets = new Planet[8]{mercury, venus,  earth,  mars,
                                    jupiter, saturn, uranus, neptune};
@@ -485,18 +551,17 @@ Planet *populatePlanets()
 }
 
 
-// calcYears() will calculate the distance between an origin and a planet,
-// returns the time it takes to get there
-// Pre: distanceAsAU is double, velocityAsMph is double
-// Post: a positive double is returned
-double calcYears(double distanceAsAU, double velocityAsMph)
+// calcYears() solves for time using the velocityAsMph, distance, time
+// relationship Pre: distanceAsAU is double, velocityAsMphAsMph is double Post:
+// a positive double is returned
+double calcYears(double distanceAsAU, double velocityAsMphAsMph)
 {
    const int HOURS_PER_YEAR = 8760;
    const double MILES_PER_AU = 9.296e+7;
 
    const double distanceAsMiles = distanceAsAU * MILES_PER_AU;
 
-   return distanceAsMiles / velocityAsMph / HOURS_PER_YEAR;
+   return distanceAsMiles / velocityAsMphAsMph / HOURS_PER_YEAR;
 }
 
 
@@ -510,7 +575,7 @@ double calcTotalTime(Waypoint *&waypoints)
    double totalTime = 0;
 
    while (waypoints[validIndex].planetName != "" &&
-          waypoints[validIndex].velocity != 0) {
+          waypoints[validIndex].velocityAsMph != 0) {
 
       totalTime += waypoints[validIndex].timeAsYears;
       validIndex += 1;
@@ -519,19 +584,22 @@ double calcTotalTime(Waypoint *&waypoints)
    return totalTime;
 }
 
-// Numerical approximation of the inverse of Kepler's equation using the
-// Newton-Raphson method. Will only work with elliptic orbits (i.e. the
-// eccentricity is NOT near 1). We should be able to find the root of the
-// function within 4-5 digits of accuracy with a max of 17-18 iterations.
+
+// Numerical approximation of Eccentric Anomaly (E) using the Newton-Raphson
+// method
+// Pre: will only converge for elliptical orbits (i.e. the eccentricity is NOT
+// near 1)
+// Post: Solve for E within 4-5 digits of accuracy with a max of 17-18
+// iterations
 double calcEccentricAnomaly(double eccentricity, double normalizedMeanAnomaly)
 {
    const double e = eccentricity;
    const double M = normalizedMeanAnomaly;
-   const bool isConverging = [](int iterationCount) {
-      return iterationCount < 19;
-   };
+   auto isConverging = [](int count) { return count > 1; };
 
+   // the inverse of the standard form of Kepler's equation
    double E = M + e * sin(M) * (1 + e * cos(M));
+
    double delta;
    int iterationCount = 0;
 
@@ -540,30 +608,32 @@ double calcEccentricAnomaly(double eccentricity, double normalizedMeanAnomaly)
       delta = abs(E1 - E);
       E = E1;
       iterationCount++;
-   } while (delta >= 0.0001 && isConverging);
+   } while (delta >= 0.0001 && isConverging(iterationCount));
 
-   if (!isConverging) {
-      print("calcEccentricAnomaly() failed. unable to converge");
+   // failsafe, should never happen with current planet selection
+   if (!isConverging(iterationCount)) {
+      print("calcEccentricAnomaly() failed. unable to converge.");
+      print("delta: " + to_string(delta));
+      exit(1);
    }
 
    return E;
 }
 
-Cord calcHeliocentricCord(const Planet &planet, const string &date)
+Cord calcHeliocentricCord(const Planet &planet, int daysSinceEpoch)
 {
-   const int daysSinceEpoch = calcDaysSinceEpoch(date);
-   const double meanMotion = 360.0 / planet.orbitalPeriod;
+   const double meanMotion = 360.0 / planet.period;
    const double normalizedMeanAnomaly =
        normalizeDegrees(planet.meanAnomaly + meanMotion * daysSinceEpoch);
 
-   // orbital elements J2000
+   // orbital elements normalized to J2000
    const double a = planet.semiMajorAxis;
    const double e = planet.eccentricity;
    const double o = toRadians(planet.longitudeOfAscendingNode);
    const double p = toRadians(planet.longitudeOfPerihelion);
    const double i = toRadians(planet.orbitalInclination);
 
-   // normalized from J2000 epoch to specified date
+   // normalized to specified date
    const double M = toRadians(normalizedMeanAnomaly);
    const double E = calcEccentricAnomaly(e, M);
 
@@ -594,13 +664,15 @@ Waypoint createWaypoint(const Planet *&planets)
 {
    const string date = getDate();
    const size_t planetIndex = getPlanetIndex();
-   const double velocity = getVelocity();
+   const double velocityAsMph = getVelocityAsMph();
+
+   const int days = calcDaysSinceEpoch(date);
 
    const Planet planet = planets[planetIndex];
    const Planet earth = planets[2];
 
-   const Cord heliocentricCord = calcHeliocentricCord(planet, date);
-   const Cord heliocentricCordEarth = calcHeliocentricCord(earth, date);
+   const Cord heliocentricCord = calcHeliocentricCord(planet, days);
+   const Cord heliocentricCordEarth = calcHeliocentricCord(earth, days);
 
    // geocentric 3d cartesian coordinates
    const double gX = heliocentricCordEarth.x - heliocentricCord.x;
@@ -608,10 +680,10 @@ Waypoint createWaypoint(const Planet *&planets)
    const double gZ = heliocentricCordEarth.z - heliocentricCord.z;
 
    const double distance = sqrt(pow(gX, 2) + pow(gY, 2) + pow(gZ, 2));
-   const double years = calcYears(distance, velocity);
+   const double years = calcYears(distance, velocityAsMph);
    const string totalTimeAsString = formatTimeResult("Travel time", years);
 
    print(totalTimeAsString);
 
-   return {date, planet.name, velocity, distance, years};
+   return {date, planet.name, velocityAsMph, distance, years};
 }
