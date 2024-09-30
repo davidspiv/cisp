@@ -2,7 +2,11 @@
 # Author:           David Spivack
 # Assignment:       Assignment 6
 # Date:             9/29/24
-# Description:
+# Description:      Calculate travel time according to three user inputs: A
+#                   date, a planet in our solar system, and an average
+#                   velocity. Menu options include displaying the sum of time
+#                   scalars for all waypoints entered during runtime and
+#                   showing the input history.
 # Sources:          Assignment 6 specifications
 #
 #                   Computing the position of the planets in the sky:
@@ -54,12 +58,14 @@ struct Planet {
 // Orbital Inclination: [units: degrees] The tilt of the planet's orbit around
 // the sun relative to plane of the ecliptic
 
-// Longitude of Ascending Node: [units: degrees] angular position on plane of
-// the ecliptic relative to J2000
+// Longitude of the Ascending Node: [units: degrees] angular position on plane
+// of the ecliptic relative to J2000
 
 // Longitude of Perihelion: [units: degrees] the point in orbit closest to sun
 // relative to the plane of the ecliptic. All three anomalies (calculated later
-// on) are zero when the planet is in perihelion.
+// on) are zero when the planet is in perihelion. The longitude of the
+// ascending node subtracted from this angle is known as the argument of
+// the periapsis
 
 // Mean Anomaly: [units: degrees] the fraction of the period that has elapsed
 // since the planet passed through the perihelion relative to J2000
@@ -82,8 +88,8 @@ struct Planet {
 // space at given a point in time, accurate within a few centuries of the
 // reference epoch.
 
-// There are two main categories of movement NOT accounted for which reduces
-// our accuracy in this step significantly:
+// There are two main categories of planetary movement NOT accounted for which
+// reduces our accuracy significantly:
 // 1) nutation / precession: changes in the planet's axis of rotation
 // 2) perturbations: forces other than the sun acting on the planet (other
 // satellites). This especially effects the Jovian planets: Saturn, Jupiter,
@@ -123,12 +129,12 @@ void printHistory(const Waypoint *waypoints, size_t numInputs);
 void printTotal(Waypoint *&waypoints);
 int getMenuChoice(int maxChoice);
 string getDate();
-size_t getPlanetIndex();
+int getPlanetIndex();
 int getVelocityAsMph();
 
 // Business
 Planet *populatePlanets();
-double calcYears(double distanceAsAU, double velocityAsMphAsMph);
+double calcYears(double distanceAsAU, double velocityAsMph);
 double calcTotalTime(Waypoint *&waypoints);
 double calcEccentricAnomaly(double eccentricity, double normalizedMeanAnomaly);
 Cord calcHeliocentricCord(const Planet &planet, int daysSinceEpoch);
@@ -338,6 +344,8 @@ void printMenu()
 
 // printHistory() loops through data arrays and prints out past inputs and
 // results
+// Pre: waypoints struct array is populated, numInputs indicates size
+// Post: input and result history is displayed to the console
 void printHistory(const Waypoint *waypoints, size_t numInputs)
 {
    cout << endl
@@ -355,10 +363,15 @@ void printHistory(const Waypoint *waypoints, size_t numInputs)
    }
 }
 
+
+// printTotal() formats total and displays to console
+// Pre: waypoints struct is populated
+// Post: time is displayed to the console
 void printTotal(Waypoint *&waypoints)
 {
    double totalTime = calcTotalTime(waypoints);
    string totalTimeAsString = formatTimeResult("Total time", totalTime);
+
    print(totalTimeAsString);
 }
 
@@ -382,6 +395,12 @@ int getMenuChoice(int maxChoice)
    return menuOption;
 }
 
+
+// getDate() gets date string from user input
+// Pre: none
+// Post: correctly formatted date string is returned
+// Notes: not elegant, but the project compiles noticeably faster without regex
+// library!
 string getDate()
 {
    string date;
@@ -406,9 +425,14 @@ string getDate()
    return date;
 }
 
-size_t getPlanetIndex()
+
+// getPlanet() matches a user input with a list of celestial bodies, returns a
+// index to the Planet struct
+// Pre: none
+// Post: planetIndex is a valid Planet struct
+int getPlanetIndex()
 {
-   double planetIndex = -1;
+   int planetIndex = -1;
 
    do {
       string name = getString("Enter a planet in our solar system: ");
@@ -449,19 +473,23 @@ size_t getPlanetIndex()
 
 // getVelocityAsMph() gets a user input is miles per hour and returns it
 // Pre: none
-// Post: velocityAsMphAsMph is an integer greater than 0
+// Post: velocityAsMph is an integer greater than 0
 int getVelocityAsMph()
 {
-   int velocityAsMphAsMph = getInteger("Enter miles per hour: ");
+   int velocityAsMph = getInteger("Enter miles per hour: ");
 
-   while (velocityAsMphAsMph <= 0) {
+   while (velocityAsMph <= 0) {
       print("Must be greater than 0.");
-      velocityAsMphAsMph = getInteger("Enter miles per hour: ");
+      velocityAsMph = getInteger("Enter miles per hour: ");
    }
 
-   return velocityAsMphAsMph;
+   return velocityAsMph;
 }
 
+// populatePlanets() populates a dynamically allocated array with Planet
+// structs and returns the owner pointer
+// Pre: none
+// Post: planets is an array of Planet structs
 Planet *populatePlanets()
 {
    Planet mercury;
@@ -551,17 +579,17 @@ Planet *populatePlanets()
 }
 
 
-// calcYears() solves for time using the velocityAsMph, distance, time
-// relationship Pre: distanceAsAU is double, velocityAsMphAsMph is double Post:
-// a positive double is returned
-double calcYears(double distanceAsAU, double velocityAsMphAsMph)
+// calcYears() solves for time using the velocity equation
+// Pre: distanceAsAU and velocityAsMph are both positive
+// Post: a positive double is returned
+double calcYears(double distanceAsAU, double velocityAsMph)
 {
    const int HOURS_PER_YEAR = 8760;
    const double MILES_PER_AU = 9.296e+7;
 
    const double distanceAsMiles = distanceAsAU * MILES_PER_AU;
 
-   return distanceAsMiles / velocityAsMphAsMph / HOURS_PER_YEAR;
+   return distanceAsMiles / velocityAsMph / HOURS_PER_YEAR;
 }
 
 
@@ -590,12 +618,16 @@ double calcTotalTime(Waypoint *&waypoints)
 // Pre: will only converge for elliptical orbits (i.e. the eccentricity is NOT
 // near 1)
 // Post: Solve for E within 4-5 digits of accuracy with a max of 17-18
-// iterations
+// iterations - source: https://en.wikipedia.org/wiki/Kepler%27s_equation
+// Notes: for this function and calcHeliocentricCord() I used single character
+// variable names. I know this is typically not advised. In this case, the
+// convention matches the equations in my reference material and made it easier
+// to comprehend each step.
 double calcEccentricAnomaly(double eccentricity, double normalizedMeanAnomaly)
 {
    const double e = eccentricity;
    const double M = normalizedMeanAnomaly;
-   auto isConverging = [](int count) { return count > 1; };
+   auto isConverging = [](int count) { return count < 19; };
 
    // the inverse of the standard form of Kepler's equation
    double E = M + e * sin(M) * (1 + e * cos(M));
@@ -620,6 +652,11 @@ double calcEccentricAnomaly(double eccentricity, double normalizedMeanAnomaly)
    return E;
 }
 
+
+// calcHeliocentricCord() calculates the heliocentric coordinates of the planet
+// at the specified time
+// Pre: Planet is a planet struct, daysSinceEpoch is an int
+// Post: Cord struct is returned
 Cord calcHeliocentricCord(const Planet &planet, int daysSinceEpoch)
 {
    const double meanMotion = 360.0 / planet.period;
@@ -660,10 +697,15 @@ Cord calcHeliocentricCord(const Planet &planet, int daysSinceEpoch)
    return {xh, yh, zh};
 }
 
+
+// createWaypoint() creates a Waypoint struct that includes inputs and the
+// results attributed to one travel entry. Acts as a controller
+// Pre: planets is an array of Planet structs
+// Post: a Waypoint struct is returned
 Waypoint createWaypoint(const Planet *&planets)
 {
    const string date = getDate();
-   const size_t planetIndex = getPlanetIndex();
+   const int planetIndex = getPlanetIndex();
    const double velocityAsMph = getVelocityAsMph();
 
    const int days = calcDaysSinceEpoch(date);
