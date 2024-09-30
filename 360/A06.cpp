@@ -105,8 +105,14 @@ struct Cord {
    double z;
 };
 
+struct Date {
+   int month;
+   int day;
+   int year;
+};
+
 struct Waypoint {
-   string date;
+   Date date;
    string planetName;
    double velocityAsMph;
    double geocentricDistance;
@@ -118,7 +124,7 @@ string toLowercase(string input);
 template <typename T> void expandArray(T *&arr, size_t &maxInputs);
 double normalizeDegrees(double scalar);
 double toRadians(double degrees);
-int calcDaysSinceEpoch(const string &date);
+int calcDaysSinceEpoch(const Date &date);
 string formatDouble(double yearsAsDouble);
 string formatTimeResult(const string &label, double years);
 
@@ -128,7 +134,7 @@ void printMenu();
 void printHistory(const Waypoint *waypoints, size_t numInputs);
 void printTotal(Waypoint *&waypoints);
 int getMenuChoice(int maxChoice);
-string getDate();
+Date getDate();
 int getPlanetIndex();
 int getVelocityAsMph();
 
@@ -250,13 +256,13 @@ double toRadians(double degrees)
 
 // calcDaysSinceEpoch() finds difference in days between date argument and the
 // J2000 epoch
-// Pre: date is reference string formatted MM/DD/YYYY
+// Pre: date is reference Date struct
 // Post: total days is integer
-int calcDaysSinceEpoch(const string &date)
+int calcDaysSinceEpoch(const Date &date)
 {
-   const int year = stoi(date.substr(date.length() - 4));
-   const int month = stoi(date.substr(0, 2));
-   const int day = stoi(date.substr(3, 2));
+   const int month = date.month;
+   const int day = date.day;
+   const int year = date.year;
 
    // intentional integer division
    int totalDays = 367 * year - 7 * (year + (month + 9) / 12) / 4 -
@@ -349,17 +355,23 @@ void printMenu()
 void printHistory(const Waypoint *waypoints, size_t numInputs)
 {
    cout << endl
-        << setw(11) << left << "Date" << setw(9) << "Planet" << setw(7)
+        << setw(11) << left << "Date" << setw(9) << "Planet" << setw(13)
         << "MPH" << setw(9) << "AU" << "Years" << endl;
-   cout << setw(11) << left << "----" << setw(9) << "------" << setw(7)
+   cout << setw(11) << left << "----" << setw(9) << "------" << setw(13)
         << "---" << setw(9) << "--" << "-----" << endl;
 
    for (size_t i = 0; i < numInputs; i++) {
 
-      cout << setw(11) << left << waypoints[i].date << setw(9)
-           << waypoints[i].planetName << setw(7) << waypoints[i].velocityAsMph
-           << setw(9) << waypoints[i].geocentricDistance
-           << waypoints[i].timeAsYears << endl;
+      const string month = to_string(waypoints[i].date.month);
+      const string day = to_string(waypoints[i].date.day);
+      const string year = to_string(waypoints[i].date.year);
+
+      const string date = month + '/' + day + '/' + year;
+
+      cout << setw(11) << left << date << setw(9) << waypoints[i].planetName
+           << setw(13) << waypoints[i].velocityAsMph << setw(9)
+           << waypoints[i].geocentricDistance << waypoints[i].timeAsYears
+           << endl;
    }
 }
 
@@ -396,38 +408,62 @@ int getMenuChoice(int maxChoice)
 }
 
 
-// getDate() gets date string from user input
-// Pre: none
-// Post: correctly formatted date string is returned
-// Notes: not elegant, but the project compiles noticeably faster without regex
-// library!
-string getDate()
+// getDate() gets date string from user input, more lenient than prompt
+// suggests
+// Pre: will accept three numbers separated by exactly two "/"
+// characters
+// Post: populated date Struct is returned
+Date getDate()
 {
-   string date;
+   int month = 0;
+   int day = 0;
+   int year = 0;
+
    bool isFormatted = false;
 
    cout << endl;
 
    do {
-      date = getString("Enter a date (MM/DD/YYYY): ");
-      if (date.length() == 10 && isdigit(date[0]) && isdigit(date[1]) &&
-          isdigit(date[3]) && isdigit(date[4]) && isdigit(date[6]) &&
-          isdigit(date[7]) && isdigit(date[8]) && isdigit(date[9])) {
+      int deliminatorCount = 0;
+      string numAsString = "0";
+
+      const string date = getString("Enter a date (MM/DD/YYYY): ");
+
+      for (const char character : date) {
+
+         if (character == '/') {
+            deliminatorCount += 1;
+            if (deliminatorCount == 1) {
+               month = stoi(numAsString);
+               numAsString = "0";
+            }
+            else if (deliminatorCount == 2) {
+               day = stoi(numAsString);
+               numAsString = "0";
+            }
+         }
+         else {
+            numAsString += character;
+         }
+      }
+
+      year = stoi(numAsString);
+
+      if (deliminatorCount == 2 && month > 0 && month <= 12 && day > 0 &&
+          day <= 31) {
          isFormatted = true;
       }
       else {
          print("Date formatted incorrectly, try again");
       }
 
-
    } while (!isFormatted);
 
-   return date;
+   return {month, day, year};
 }
 
 
-// getPlanet() matches a user input with a list of celestial bodies, returns a
-// index to the Planet struct
+// getPlanet() matches a user input with a list of celestial bodies
 // Pre: none
 // Post: planetIndex is a valid Planet struct
 int getPlanetIndex()
@@ -485,6 +521,7 @@ int getVelocityAsMph()
 
    return velocityAsMph;
 }
+
 
 // populatePlanets() populates a dynamically allocated array with Planet
 // structs and returns the owner pointer
@@ -704,7 +741,7 @@ Cord calcHeliocentricCord(const Planet &planet, int daysSinceEpoch)
 // Post: a Waypoint struct is returned
 Waypoint createWaypoint(const Planet *&planets)
 {
-   const string date = getDate();
+   const Date date = getDate();
    const int planetIndex = getPlanetIndex();
    const double velocityAsMph = getVelocityAsMph();
 
