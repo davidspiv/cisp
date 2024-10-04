@@ -12,6 +12,7 @@
 #                   Computing the position of the planets in the sky:
 #                   https://stjarnhimlen.se/comp/ppcomp.html
 #                   http://www.stargazing.net/kepler/ellipse.html
+#                   http://www.stargazing.net/kepler/kepler.html
 #                   https://jtauber.github.io/orbits/
 #
 #                   Orbital elements data:
@@ -85,12 +86,12 @@ struct Planet {
 // 2000 years ago by Hipparchus, considered the founder of trigonometry.
 
 // With these measurements, we can account the for position of a planet in
-// space at given a point in time, accurate within a few centuries of the
+// space at a given point in time, accurate to within a few centuries of the
 // reference epoch.
 
 // There are two main categories of planetary movement NOT accounted for which
 // reduces our accuracy significantly:
-// 1) nutation / precession: changes in the planet's axis of rotation
+// 1) nutation and precession: changes in the planet's axis of rotation
 // 2) perturbations: forces other than the sun acting on the planet (other
 // satellites). This especially effects the Jovian planets: Saturn, Jupiter,
 // Uranus, and Neptune.
@@ -163,7 +164,6 @@ int main()
    print("Planet Trip Calculator");
 
    do {
-
       menuChoice = getMenuChoice(QUIT);
 
       if (menuChoice == ADD_WAYPOINT) {
@@ -176,7 +176,6 @@ int main()
          numInputs += 1;
       }
       else if (menuChoice == HISTORY) {
-
          printHistory(waypoints, numInputs);
       }
       else if (menuChoice == TOTAL) {
@@ -265,9 +264,9 @@ int calcDaysSinceEpoch(const Date &date)
    const int year = date.year;
 
    // intentional integer division
-   int totalDays = 367 * year - 7 * (year + (month + 9) / 12) / 4 -
-                   3 * ((year + (month - 9) / 7) / 100 + 1) / 4 +
-                   275 * month / 9 + day - 730515;
+   const int totalDays = 367 * year - 7 * (year + (month + 9) / 12) / 4 -
+                         3 * ((year + (month - 9) / 7) / 100 + 1) / 4 +
+                         275 * month / 9 + day - 730515;
 
    return totalDays;
 }
@@ -432,7 +431,9 @@ Date getDate()
       for (const char character : date) {
 
          if (character == '/') {
+
             deliminatorCount += 1;
+
             if (deliminatorCount == 1) {
                month = stoi(numAsString);
                numAsString = "0";
@@ -677,7 +678,7 @@ double calcEccentricAnomaly(double eccentricity, double normalizedMeanAnomaly)
       delta = abs(E1 - E);
       E = E1;
       iterationCount++;
-   } while (delta >= 0.0001 && isConverging(iterationCount));
+   } while (delta >= 0.00001 && isConverging(iterationCount));
 
    // failsafe, should never happen with current planet selection
    if (!isConverging(iterationCount)) {
