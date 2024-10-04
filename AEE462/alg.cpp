@@ -5,38 +5,67 @@
 
 using namespace std;
 
-double calcResult(const vector<double> &a, double x) {
-  double numerator = (a.size() - 2.0) * a[0] * x + (a.size() - 3.0) * a[1];
-  double denominator = (a.size() - 1.0) * a[0] * x + (a.size() - 2.0) * a[1];
+// polynomial evaluation using Horner's rule - avoids pow()
+// pre: vector must have at least 2 elements
+double evaluatePolynomial(const vector<double> &coeffs, double x) {
+  double numerator;
+  double denominator;
 
-  for (size_t i = 2; i < (a.size() - 1); i++) {
-    if (i != (a.size() - 2)) {
-      numerator = numerator * x + (a.size() - i - 2.0) * a[i];
-    }
+  switch (coeffs.size()) {
+    case 0:
+    case 1:
+      throw invalid_argument(
+          "Coefficient vector must have at least 2 elements.");
 
-    denominator = denominator * x + (a.size() - i - 1.0) * a[i];
+    case 2:
+      numerator = -coeffs[1];
+      denominator = coeffs[0];
+      break;
+
+    case 3:
+      numerator = coeffs[0] * x * x - coeffs[2];
+      denominator = 2 * coeffs[0] * x + coeffs[1];
+      break;
+
+    default:
+      numerator =
+          (coeffs.size() - 2) * coeffs[0] * x + (coeffs.size() - 3) * coeffs[1];
+      denominator =
+          (coeffs.size() - 1) * coeffs[0] * x + (coeffs.size() - 2) * coeffs[1];
+
+      for (size_t i = 2; i < (coeffs.size() - 4); i++) {
+        numerator = numerator * x + (coeffs.size() - i - 2) * coeffs[i];
+        denominator = denominator * x + (coeffs.size() - i - 1) * coeffs[i];
+      }
+
+      numerator = numerator * x * x - coeffs[coeffs.size() - 1];
+      denominator = denominator * x + coeffs[coeffs.size() - 2];
+      break;
   }
-
-  numerator = numerator * pow(x, 2) - a[a.size() - 1];
 
   return numerator / denominator;
 }
 
+// Newton-Raphson Method
 int main() {
-  vector<double> a = {5, 2, -2};
-  double x = 1;
-
+  vector<double> polynomial = {2, -3, 4, 5};
+  double guess = 50;
   double delta;
-  auto isConverging = [](int count) { return count < 19; };
   int iterationCount = 0;
 
   do {
-    const double x1 = calcResult(a, x);
-    delta = abs((x1 - x) / x);
-    x = x1;
+    const double refinedGuess = evaluatePolynomial(polynomial, guess);
+    delta = abs((refinedGuess - guess) / guess);
+    guess = refinedGuess;
     iterationCount++;
-  } while (delta >= 0.00001 && isConverging(iterationCount));
 
-  cout << "x: " << x << endl;
+    if (iterationCount > 17) {
+      cout << "not converged" << endl;
+      return 1;
+    }
+
+  } while (delta >= 0.00001);
+
+  cout << "zero: " << guess << endl;
   return 0;
 }
