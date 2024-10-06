@@ -39,7 +39,7 @@ double taylorSeriesSine(double x, size_t n) {
 }
 
 int main() {
-  const double rad = -2.2;
+  const double rad = -.34234;
   const double approx = taylorSeriesSine(rad, 30);
 
   cout << setprecision(10) << "approx: " << approx << endl;
