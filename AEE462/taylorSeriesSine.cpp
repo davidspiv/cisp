@@ -13,23 +13,19 @@ void createFactorialCache(double *&factorialCache, size_t iterations) {
 }
 
 double taylorSeriesSine(double x, size_t n) {
+  double result = 0;
+  bool isAddOperation = n % 4 == 3;
   double factorialCache[n + 1];
   double *factorialCachePointer = factorialCache;
 
   createFactorialCache(factorialCachePointer, n);
 
-  double result = 0;
-  bool isPositive = n % 4 == 3;
-
   for (int i = n; i > 0; i -= 1) {
     const double coefficient = (1 / factorialCache[i]);
+
     if (i % 2) {
-      if (isPositive) {
-        result += coefficient;
-      } else {
-        result -= coefficient;
-      }
-      isPositive = !isPositive;
+      result = isAddOperation ? result + coefficient : result - coefficient;
+      isAddOperation = !isAddOperation;
     }
     result *= x;
   }
