@@ -3,37 +3,32 @@
 #include <iomanip>
 #include <iostream>
 
-#include "timer.h"
-
 using namespace std;
 
-void createFactorialArr(double *&factorialArr, size_t degree) {
-  factorialArr[0] = 1;
-  for (size_t i = 1; i <= degree; i++) {
-    factorialArr[i] = i * factorialArr[i - 1];
+void createFactorialCache(double *&factorialCache, size_t iterations) {
+  factorialCache[0] = 1;
+  for (size_t i = 1; i <= iterations; i++) {
+    factorialCache[i] = i * factorialCache[i - 1];
   }
 }
 
-double taylor(double x, size_t n) {
-  Timer timer;
-  if (!(n % 2)) {
-    n -= 1;
-  }
+double taylorSeriesSine(double x, size_t n) {
+  double factorialCache[n + 1];
+  double *factorialCachePointer = factorialCache;
 
+  createFactorialCache(factorialCachePointer, n);
+
+  double result = 0;
   bool isPositive = n % 4 == 3;
 
-  double factorialArr[n];
-  double *factorialArrPointer = factorialArr;
-
-  // double (*factorialArrPointer)[n];
-
-  createFactorialArr(factorialArrPointer, n);
-  double result = (1 / factorialArr[n]) * x;
-
-  for (int i = n - 1; i > 0; i -= 1) {
+  for (int i = n; i > 0; i -= 1) {
+    const double coefficient = (1 / factorialCache[i]);
     if (i % 2) {
-      result = isPositive ? result + (1 / factorialArr[i])
-                          : result - (1 / factorialArr[i]);
+      if (isPositive) {
+        result += coefficient;
+      } else {
+        result -= coefficient;
+      }
       isPositive = !isPositive;
     }
     result *= x;
@@ -43,8 +38,8 @@ double taylor(double x, size_t n) {
 }
 
 int main() {
-  const double rad = -2.2;
-  const double approx = taylor(rad, 100);
+  const double rad = 3.1;
+  const double approx = taylorSeriesSine(rad, 20);
 
   cout << setprecision(10) << "approx: " << approx << endl;
   cout << setprecision(10) << "answer: " << sin(rad) << endl;
