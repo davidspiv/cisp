@@ -5,7 +5,7 @@
 
 using namespace std;
 
-// polynomial evaluation using Horner's rule - avoids pow()
+// polynomial evaluation using Horner's method - avoids pow()
 // pre: vector must have at least 2 elements
 double evaluatePolynomial(const vector<double> &coeffs, double x) {
   double numerator;
