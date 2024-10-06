@@ -1,1 +1,0 @@
-A pointer is a variable that is used to store another variable's memory address. The memory address can be located on the stack or on the heap. It is important to keep in mind that a pointers byte size is fixed regardless of what datatype it is referencing. A pointer doesn't inherently know what type of data it is referencing - you are telling it.

@@ -48,8 +48,8 @@ double evaluatePolynomial(const vector<double> &coeffs, double x) {
 
 // Newton-Raphson Method
 int main() {
-  vector<double> polynomial = {2, -3, 4, 5};
-  double guess = 50;
+  vector<double> polynomial = {8, 1, 0};
+  double guess = -3;
   double delta;
   int iterationCount = 0;
 
@@ -64,7 +64,7 @@ int main() {
       return 1;
     }
 
-  } while (delta >= 0.00001);
+  } while (delta >= 1e-7);
 
   cout << "zero: " << guess << endl;
   return 0;

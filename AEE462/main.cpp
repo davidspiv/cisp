@@ -236,7 +236,7 @@ int getPlanetIndex() {
     name = toLowercase(name);
 
     if (name.length() > 10) {
-      print("Planet meanAnomalyUranusst be within our solar system.");
+      print("Planet meanAnomaly must be within our solar system.");
     } else if (name.find("mercury") != string::npos) {
       planetIndex = 0;
     } else if (name.find("venus") != string::npos) {
