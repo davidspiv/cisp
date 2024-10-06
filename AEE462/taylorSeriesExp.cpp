@@ -3,33 +3,48 @@
 #include <iomanip>
 #include <iostream>
 
+#include "timer.h"
+
 using namespace std;
 
-long double taylor(long double x, size_t n) {
-  long double sum = 0;
-  long int factorial = 1;
-  bool isAdd = true;
-  for (size_t i = 1; i <= n; i += 1) {
-    factorial *= i;
+void createFactorialArr(double *&factorialArr, size_t degree) {
+  factorialArr[0] = 1;
+  for (size_t i = 1; i <= degree; i++) {
+    factorialArr[i] = i * factorialArr[i - 1];
+  }
+}
 
-    if (i % 2) {
-      const long double term = ((pow(x, i)) / factorial);
-      if (isAdd) {
-        sum += term;
-        cout << i << endl;
-      } else {
-        sum -= term;
-      }
-      isAdd = !isAdd;
-    }
+double taylor(double x, size_t n) {
+  Timer timer;
+  if (!(n % 2)) {
+    n -= 1;
   }
 
-  return sum;
+  bool isPositive = n % 4 == 3;
+
+  double factorialArr[n];
+  double *factorialArrPointer = factorialArr;
+
+  // double (*factorialArrPointer)[n];
+
+  createFactorialArr(factorialArrPointer, n);
+  double result = (1 / factorialArr[n]) * x;
+
+  for (int i = n - 1; i > 0; i -= 1) {
+    if (i % 2) {
+      result = isPositive ? result + (1 / factorialArr[i])
+                          : result - (1 / factorialArr[i]);
+      isPositive = !isPositive;
+    }
+    result *= x;
+  }
+
+  return result;
 }
 
 int main() {
-  const long double rad = .11;
-  const long double approx = taylor(rad, 5);
+  const double rad = -2.2;
+  const double approx = taylor(rad, 100);
 
   cout << setprecision(10) << "approx: " << approx << endl;
   cout << setprecision(10) << "answer: " << sin(rad) << endl;
