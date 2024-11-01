@@ -57,7 +57,8 @@ int main()
    StemData stemData;
    StemResults stemResults = {nullptr, nullptr, 0, 0};
 
-   if (!openFile(inFile, "./stem.txt")) {
+
+   if (!openFile(inFile, "./360/stem.txt")) {
       cout << "Input File did not open. Program terminating!!!";
       return 1;
    }
