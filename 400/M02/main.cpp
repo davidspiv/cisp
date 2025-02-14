@@ -28,7 +28,7 @@ int main() {
         "Public key");
   print("n = " + std::to_string(n) + " " + "d = " + std::to_string(d),
         "Private key");
-  print("Enter a positive number less than: " + std::to_string(n));
+  print("Enter a positive number less than " + std::to_string(n) + ":");
   std::cin >> m;
   c = modExp(m, e, n);
   print(c, "Cipher");

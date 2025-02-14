@@ -1,22 +1,18 @@
 CC=g++
 CFLAGS= -c -g -Wall -std=c++17 -fpermissive
-EXENAME= main
+EXENAME= M02
 
-default: build/main.o build/RSA.o
-	$(CC) build/main.o build/RSA.o -o $(EXENAME)
+default: main.o RSA.o
+	$(CC) main.o RSA.o -o $(EXENAME)
 
-#order-only-prerequisite for build dir
-build/main.o: main.cpp RSA.h io.h | build
-	$(CC) $(CFLAGS) main.cpp -o build/main.o
+main.o: main.cpp RSA.h io.h
+	$(CC) $(CFLAGS) main.cpp -o main.o
 
-build/RSA.o: RSA.cpp | build
-	$(CC) $(CFLAGS) RSA.cpp -o build/RSA.o
-
-build:
-	mkdir -p $@
+RSA.o: RSA.cpp
+	$(CC) $(CFLAGS) RSA.cpp -o RSA.o
 
 clean:
-	rm build/*.o $(EXENAME)
+	rm *.o $(EXENAME)
 
 run:
 	./$(EXENAME)
