@@ -1,6 +1,6 @@
 CC=g++
 CFLAGS= -c -g -Wall -std=c++17 -fpermissive
-EXENAME= M02
+EXENAME= M04
 
 default: main.o Matrices.o
 	$(CC) main.o Matrices.o -o $(EXENAME)
