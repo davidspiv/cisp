@@ -10,8 +10,19 @@ ImageEditor::ImageEditor(const string& inFileName) : pic(Picture(inFileName)) {}
 
 void ImageEditor::save(const string& outFileName) { pic.save(outFileName); }
 
-// converts degrees to a value between 0 and 360
-double scaleRange(double x) { return floor(69 * x / 765); }
+size_t scaleRange(double x) {
+  const size_t currMax = 765;  // 100
+  const size_t newMax = 69;
+
+  return floor(newMax * x / currMax);
+}
+
+// from 0 to 100
+double calcLightness(Color c) {
+  //   const double gamma = 2.2;
+  const double y = 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
+  return 116 * pow(y, 1 / 3) - 16;
+}
 
 void ImageEditor::ascii(const string& outFileName) {
   const string asciiGrayscaleRange =
@@ -21,18 +32,27 @@ void ImageEditor::ascii(const string& outFileName) {
   stringstream ss;
   size_t width = pic.width();
   size_t height = pic.height();
-  for (size_t j = 0; j < height; j += 7) {
-    for (size_t i = 0; i < width; i += 3) {
-      const int red = pic.red(i, j);
-      const int green = pic.green(i, j);
-      const int blue = pic.blue(i, j);
-      const int sum = red + green + blue;
+  for (size_t j = 0; j < height; j++) {
+    int pixSum = 0;
+    int pixNum = 0;
+
+    for (size_t i = 0; i < width; i++) {
+      const int r = pic.red(i, j);
+      const int g = pic.green(i, j);
+      const int b = pic.blue(i, j);
+
+      pixSum += r + g + b;  // calcLightness({r, g, b});
+      pixNum++;
 
       if (!(j % 7) && !(i % 3)) {
-        ss << asciiGrayscaleRange[scaleRange(sum)];
+        ss << asciiGrayscaleRange[scaleRange(pixSum / pixNum)];
+        pixSum = pixNum = 0;
       }
     }
-    ss << endl;
+
+    if (!(j % 7)) {
+      ss << endl;
+    }
   }
 
   ofstream out;
