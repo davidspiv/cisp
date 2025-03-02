@@ -22,16 +22,16 @@ double YtoLstar(double Y) {
   }
 }
 
-size_t scaleRange(double x, size_t currMax, size_t newMax) {
-  if (!currMax) {
-    throw std::invalid_argument("currMax cannot be zero");
-  }
-  return newMax * (x / currMax);
-}
-
 // from 0 to 100
 double calcLightness(Color c) {
   const double Y =
       0.2126 * rbgToLin(c.r) + 0.7152 * rbgToLin(c.g) + 0.0722 * rbgToLin(c.b);
   return YtoLstar(Y);
+}
+
+size_t scaleRange(double x, size_t currMax, size_t newMax) {
+  if (!currMax) {
+    throw std::invalid_argument("currMax cannot be zero");
+  }
+  return newMax * (x / currMax);
 }

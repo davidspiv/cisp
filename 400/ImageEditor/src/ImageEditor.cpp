@@ -142,15 +142,12 @@ void ImageEditor::ascii(const string& outFileName) {
     int pixNum = 0;
 
     for (size_t i = 0; i < width; i++) {
-      Color c = {pic.red(i, j), pic.green(i, j), pic.blue(i, j)};
-
-      pixSum += calcLightness(c);
+      pixSum += pic.red(i, j);
       pixNum++;
 
       if (!(j % 6) && !(i % 3)) {
         const int avg = pixSum / pixNum;
-        ss << asciiSorted[scaleRange(avg, 100,
-                                     asciiSorted.length() - 1)];  
+        ss << asciiSorted[scaleRange(avg, 255, asciiSorted.length() - 1)];
         pixSum = pixNum = 0;
       }
     }
