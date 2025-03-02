@@ -16,7 +16,5 @@ int main() {
   //   imageEditor2.save("percBright.PNG");
 
   ImageEditor imageEditor("pikachu.png");
-  imageEditor.graysBasic();
-  imageEditor.save("grays.png");
-  //   imageEditor.ascii("result.txt");
+  imageEditor.ascii("result.txt");
 }
