@@ -11,10 +11,10 @@ ImageEditor::ImageEditor(const string& inFileName) : pic(Picture(inFileName)) {}
 void ImageEditor::save(const string& outFileName) { pic.save(outFileName); }
 
 // converts degrees to a value between 0 and 360
-double scale(double x) { return floor(69 * x / 765); }
+double scaleRange(double x) { return floor(69 * x / 765); }
 
 void ImageEditor::ascii(const string& outFileName) {
-  const string asciiGrayscale =
+  const string asciiGrayscaleRange =
       "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/"
       "\\|()1{}[]?-_+~<>i!lI;:,\"^`'. ";
 
@@ -28,8 +28,9 @@ void ImageEditor::ascii(const string& outFileName) {
       const int blue = pic.blue(i, j);
       const int sum = red + green + blue;
 
-      //   ss << asciiGrayscale.length() << endl;
-      ss << asciiGrayscale[scale(sum)];
+      if (!(j % 7) && !(i % 3)) {
+        ss << asciiGrayscaleRange[scaleRange(sum)];
+      }
     }
     ss << endl;
   }
