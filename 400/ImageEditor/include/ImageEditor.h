@@ -13,6 +13,7 @@ class ImageEditor {
  public:
   explicit ImageEditor(const string& inFileName);
   void save(const string& outFileName);
+  void ascii(const string& outFileName);
 
   ImageEditor&
   operator-();  // Invert all colors and return *this (image negative)

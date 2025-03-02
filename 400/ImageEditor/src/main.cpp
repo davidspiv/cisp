@@ -6,5 +6,5 @@
 using namespace std;
 int main() {
   ImageEditor imageEditor("pikachu.png");
-  imageEditor.ascii();
+  imageEditor.ascii("pikachu.txt");
 }

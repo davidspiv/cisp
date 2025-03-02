@@ -1,5 +1,8 @@
 #include "ImageEditor.h"
 
+#include <cmath>
+#include <fstream>
+#include <sstream>
 #include <string>
 using namespace std;
 
@@ -7,7 +10,35 @@ ImageEditor::ImageEditor(const string& inFileName) : pic(Picture(inFileName)) {}
 
 void ImageEditor::save(const string& outFileName) { pic.save(outFileName); }
 
-void ImageEditor::ascii()  {}
+// converts degrees to a value between 0 and 360
+double scale(double x) { return floor(69 * x / 765); }
+
+void ImageEditor::ascii(const string& outFileName) {
+  const string asciiGrayscale =
+      "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/"
+      "\\|()1{}[]?-_+~<>i!lI;:,\"^`'. ";
+
+  stringstream ss;
+  size_t width = pic.width();
+  size_t height = pic.height();
+  for (size_t j = 0; j < height; j += 7) {
+    for (size_t i = 0; i < width; i += 3) {
+      const int red = pic.red(i, j);
+      const int green = pic.green(i, j);
+      const int blue = pic.blue(i, j);
+      const int sum = red + green + blue;
+
+      //   ss << asciiGrayscale.length() << endl;
+      ss << asciiGrayscale[scale(sum)];
+    }
+    ss << endl;
+  }
+
+  ofstream out;
+  out.open(outFileName);
+  out << ss.str();
+  out.close();
+}
 
 // (image negative)
 ImageEditor& ImageEditor::operator-() {
