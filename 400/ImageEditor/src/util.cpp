@@ -22,11 +22,11 @@ double YtoLstar(double Y) {
   }
 }
 
-size_t scaleRange(double x) {
-  const size_t currMax = 100;  // 765
-  const size_t newMax = 69;
-
-  return floor(newMax * x / currMax);
+size_t scaleRange(double x, size_t currMax, size_t newMax) {
+  if (!currMax) {
+    throw std::invalid_argument("currMax cannot be zero");
+  }
+  return newMax * (x / currMax);
 }
 
 // from 0 to 100

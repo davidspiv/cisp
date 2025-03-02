@@ -10,7 +10,7 @@ double rbgToLin(double channel);
 // returns L* which is "perceptual lightness"
 double YtoLstar(double Y);
 
-size_t scaleRange(double x);
+size_t scaleRange(double x, size_t currMax, size_t newMax);
 
 // return value from 0 to 100
 double calcLightness(Color c);

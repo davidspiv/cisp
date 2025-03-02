@@ -112,8 +112,24 @@ ImageEditor& ImageEditor::operator*=(unsigned int n) {
   return *this;
 }
 
+void ImageEditor::graysBasic() { pic = pic.grays(); }
+
+void ImageEditor::graysViaLightness() {
+  size_t width = pic.width();
+  size_t height = pic.height();
+
+  for (size_t j = 0; j < height; j++) {
+    for (size_t i = 0; i < width; i++) {
+      Color c = {pic.red(i, j), pic.green(i, j), pic.blue(i, j)};
+      const double lightness = calcLightness(c);
+      const int grayComponent = scaleRange(lightness, 100, 255);
+      pic.set(i, j, grayComponent, grayComponent, grayComponent);
+    }
+  }
+};
+
 void ImageEditor::ascii(const string& outFileName) {
-  const string asciiGrayscaleRange =
+  const string asciiSorted =
       "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/"
       "\\|()1{}[]?-_+~<>i!lI;:,\"^`'. ";
 
@@ -122,7 +138,7 @@ void ImageEditor::ascii(const string& outFileName) {
   size_t height = pic.height();
 
   for (size_t j = 0; j < height; j++) {
-    int pixSum = 0;
+    double pixSum = 0;
     int pixNum = 0;
 
     for (size_t i = 0; i < width; i++) {
@@ -132,8 +148,9 @@ void ImageEditor::ascii(const string& outFileName) {
       pixNum++;
 
       if (!(j % 6) && !(i % 3)) {
-        const double avg = pixSum / pixNum;
-        ss << asciiGrayscaleRange[scaleRange(avg)];
+        const int avg = pixSum / pixNum;
+        ss << asciiSorted[scaleRange(avg, 100,
+                                     asciiSorted.length() - 1)];  
         pixSum = pixNum = 0;
       }
     }

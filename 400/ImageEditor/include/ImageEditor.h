@@ -15,6 +15,8 @@ class ImageEditor {
   void save(const string& outFileName);
   void ascii(const string& outFileName);
   void createTestImage(const string& outFileName);
+  void graysBasic();
+  void graysViaLightness();
 
   ImageEditor&
   operator-();  // Invert all colors and return *this (image negative)
