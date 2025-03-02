@@ -5,6 +5,9 @@
 #include "picture.h"
 using namespace std;
 int main() {
+  //   ImageEditor imageEditor("pikachu.png");
+  //   imageEditor.test("test.PNG");
+
   ImageEditor imageEditor("pikachu.png");
-  imageEditor.ascii("pikachu.txt");
+  imageEditor.save("result.PNG");
 }
