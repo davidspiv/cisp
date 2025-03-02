@@ -10,8 +10,32 @@ ImageEditor::ImageEditor(const string& inFileName) : pic(Picture(inFileName)) {}
 
 void ImageEditor::save(const string& outFileName) { pic.save(outFileName); }
 
+double sRGBtoLin(double colorChannel) {
+  // Send this function a decimal sRGB gamma encoded color value
+  // between 0.0 and 1.0, and it returns a linearized value.
+
+  if (colorChannel <= 0.04045) {
+    return colorChannel / 12.92;
+  } else {
+    return pow(((colorChannel + 0.055) / 1.055), 2.4);
+  }
+}
+
+double YtoLstar(double Y) {
+  // Send this function a luminance value between 0.0 and 1.0,
+  // and it returns L* which is "perceptual lightness"
+
+  if (Y <= (216 / 24389.0)) {  // The CIE standard states 0.008856 but 216/24389
+                               // is the intent for 0.008856451679036
+    return Y * (24389 / 27.0);  // The CIE standard states 903.3, but 24389/27
+                                // is the intent, making 903.296296296296296
+  } else {
+    return pow(Y, (1 / 3.0)) * 116 - 16;
+  }
+}
+
 size_t scaleRange(double x) {
-  const size_t currMax = 765;  // 100
+  const size_t currMax = 100;  // 765
   const size_t newMax = 69;
 
   return floor(newMax * x / currMax);
@@ -19,9 +43,13 @@ size_t scaleRange(double x) {
 
 // from 0 to 100
 double calcLightness(Color c) {
-  //   const double gamma = 2.2;
-  const double y = 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
-  return 116 * pow(y, 1 / 3) - 16;
+  const double r = c.r / 255.0;
+  const double b = c.b / 255.0;
+  const double g = c.g / 255.0;
+
+  const double Y =
+      0.2126 * sRGBtoLin(r) + 0.7152 * sRGBtoLin(g) + 0.0722 * sRGBtoLin(b);
+  return YtoLstar(Y);
 }
 
 void ImageEditor::ascii(const string& outFileName) {
@@ -32,6 +60,7 @@ void ImageEditor::ascii(const string& outFileName) {
   stringstream ss;
   size_t width = pic.width();
   size_t height = pic.height();
+
   for (size_t j = 0; j < height; j++) {
     int pixSum = 0;
     int pixNum = 0;
@@ -41,10 +70,13 @@ void ImageEditor::ascii(const string& outFileName) {
       const int g = pic.green(i, j);
       const int b = pic.blue(i, j);
 
-      pixSum += r + g + b;  // calcLightness({r, g, b});
+      //   ss << calcLightness({r, g, b}) << endl;
+
+      pixSum += calcLightness({r, g, b});  // r + g + b;
       pixNum++;
 
       if (!(j % 7) && !(i % 3)) {
+        // ss << pixSum / pixNum << endl;
         ss << asciiGrayscaleRange[scaleRange(pixSum / pixNum)];
         pixSum = pixNum = 0;
       }
