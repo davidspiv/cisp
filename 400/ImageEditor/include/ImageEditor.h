@@ -17,6 +17,8 @@ class ImageEditor {
   void createTestImage(const string& outFileName);
   void graysBasic();
   void graysViaLightness();
+  void gaussianBlur();
+  void sobelFilter();
 
   ImageEditor&
   operator-();  // Invert all colors and return *this (image negative)

@@ -7,5 +7,7 @@ using namespace std;
 int main() {
   ImageEditor imageEditor("pikachu.png");
   imageEditor.graysViaLightness();
-  imageEditor.ascii("pikachu.txt");
+  imageEditor.gaussianBlur();
+  imageEditor.save("result.png");
+  //   imageEditor.ascii("result.txt");
 }

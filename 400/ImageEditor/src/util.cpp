@@ -2,13 +2,13 @@
 
 #include "ImageEditor.h"
 
-double rbgToLin(double channel) {
-  channel /= 255.0;
+double rgbToLin(int channel) {
+  double lightness = channel / 255.0;
 
-  if (channel <= 0.04045) {
-    return channel / 12.92;
+  if (lightness <= 0.04045) {
+    return lightness / 12.92;
   } else {
-    return pow(((channel + 0.055) / 1.055), 2.4);
+    return pow(((lightness + 0.055) / 1.055), 2.4);
   }
 }
 
@@ -18,14 +18,14 @@ double YtoLstar(double Y) {
     return Y * (24389 / 27.0);  // The CIE standard states 903.3, but 24389/27
                                 // is the intent, making 903.296296296296296
   } else {
-    return pow(Y, (1 / 3.0)) * 116 - 16;
+    return cbrt(Y) * 116 - 16;
   }
 }
 
 // from 0 to 100
 double calcLightness(Color c) {
   const double Y =
-      0.2126 * rbgToLin(c.r) + 0.7152 * rbgToLin(c.g) + 0.0722 * rbgToLin(c.b);
+      0.2126 * rgbToLin(c.r) + 0.7152 * rgbToLin(c.g) + 0.0722 * rgbToLin(c.b);
   return YtoLstar(Y);
 }
 

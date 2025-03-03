@@ -4,7 +4,7 @@
 
 // Input a decimal rbg gamma encoded color value between 0.0 and 1.0
 // Returns a linearized value.
-double rbgToLin(double channel);
+double rbgToLin(int channel);
 
 // input luminance value between 0.0 and 1.0
 // returns L* which is "perceptual lightness"

@@ -128,6 +128,61 @@ void ImageEditor::graysViaLightness() {
   }
 };
 
+void ImageEditor::gaussianBlur() {
+  size_t width = pic.width();
+  size_t height = pic.height();
+  Picture newPic = pic;
+  const size_t kernelSize = 5;
+  const double filterSum = 273;
+  const int bound = kernelSize / 2;
+  const int gaussKernel[kernelSize][kernelSize] = {{1, 4, 7, 4, 1},
+                                                   {4, 16, 26, 16, 4},
+                                                   {7, 26, 41, 26, 7},
+                                                   {4, 16, 26, 16, 4},
+                                                   {1, 4, 7, 4, 1}};
+
+  for (size_t j = bound; j < height - bound; j++) {
+    for (size_t i = bound; i < width - bound; i++) {
+      double rSum = 0;
+      double bSum = 0;
+      double gSum = 0;
+
+      for (int l = -2; l <= 2; l++) {
+        for (int k = -2; k <= 2; k++) {
+          const int weight = gaussKernel[l + bound][k + bound];
+
+          rSum += weight * pic.red(i + k, j + l);
+          gSum += weight * pic.green(i + k, j + l);
+          bSum += weight * pic.blue(i + k, j + l);
+        }
+      }
+
+      const double rAvg = rSum / filterSum;
+      const double gAvg = gSum / filterSum;
+      const double bAvg = bSum / filterSum;
+
+      const int r = static_cast<int>(rAvg);
+      const int g = static_cast<int>(gAvg);
+      const int b = static_cast<int>(bAvg);
+
+      newPic.set(i, j, r, g, b);
+    }
+  }
+
+  this->pic = newPic;
+};
+
+void ImageEditor::sobelFilter() {
+  //   size_t width = pic.width();
+  //   size_t height = pic.height();
+  //   Picture newPic = pic;
+
+  //   int Gx[3][3] = {{1, 0, -1}, {2, 0, -2}, {1, 0, -1}};
+  //   int Gy[3][3] = {{1, 2, 1}, {0, 0, 0}, {-1, -2, -1}};
+
+  //   this->pic = newPic;
+};
+
 void ImageEditor::ascii(const string& outFileName) {
   const string asciiSorted =
       "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/"
@@ -142,6 +197,10 @@ void ImageEditor::ascii(const string& outFileName) {
     int pixNum = 0;
 
     for (size_t i = 0; i < width; i++) {
+      if (pic.red(i, j) != pic.green(i, j) || pic.red(i, j) != pic.blue(i, j)) {
+        throw std::invalid_argument("non-grayscale pixel detected");
+      }
+
       pixSum += pic.red(i, j);
       pixNum++;
 
