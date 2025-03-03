@@ -213,7 +213,7 @@ void ImageEditor::sobelFilter() {
       }
 
       const double mag = sqrt(pow(xSum, 2) + pow(ySum, 2));
-      const size_t grey = scaleRange(mag, 745, 255);
+      const size_t grey = static_cast<int>(mag);
 
       newPic.set(i, j, grey, grey, grey);
     }
