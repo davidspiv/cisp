@@ -132,13 +132,13 @@ void ImageEditor::grayscaleViaLightness() {
   }
 };
 
-void ImageEditor::gaussianBlur(size_t kSize) {
+void ImageEditor::gaussianBlur(const size_t strength) {
   Picture tempPic = pic;
   const size_t width = pic.width();
   const size_t height = pic.height();
 
-  // kSize will be rounded up to an odd number to keep target pixel centered
-  if (!(kSize % 2)) kSize--;
+  // kSize will be rounded down to an odd number to keep target pixel centered
+  const size_t kSize = strength % 2 ? strength : strength - 1;
 
   // half the matrix not including the center
   const int kRadius = kSize / 2;

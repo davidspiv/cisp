@@ -43,10 +43,6 @@ size_t clamp(double x, size_t max) {
 }
 
 vector<double> calcGaussianKernelProduct(int size) {
-  if (size % 2 == 0) {
-    throw invalid_argument("Kernel size must be odd.");
-  }
-
   double sigma = (size - 1) / 6.0;
 
   vector<double> kernel(size, 0);
