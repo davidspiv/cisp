@@ -9,12 +9,12 @@
 #include "../include/util.h"
 using namespace std;
 
-ImageEditor::ImageEditor(const string& inFileName) : pic(Picture(inFileName)) {}
+ImageEditor::ImageEditor(const string &inFileName) : pic(Picture(inFileName)) {}
 
-void ImageEditor::save(const string& outFileName) { pic.save(outFileName); }
+void ImageEditor::save(const string &outFileName) { pic.save(outFileName); }
 
 // (image negative)
-ImageEditor& ImageEditor::operator-() {
+ImageEditor &ImageEditor::operator-() {
   size_t width = pic.width();
   size_t height = pic.height();
   for (size_t j = 0; j < height; j++) {
@@ -30,7 +30,7 @@ ImageEditor& ImageEditor::operator-() {
 };
 
 // add c to all
-ImageEditor& ImageEditor::operator+=(const Color& c) {
+ImageEditor &ImageEditor::operator+=(const Color &c) {
   size_t width = pic.width();
   size_t height = pic.height();
   for (size_t j = 0; j < height; j++) {
@@ -65,33 +65,37 @@ ImageEditor& ImageEditor::operator+=(const Color& c) {
 };
 
 // subtract c from all pixels
-ImageEditor& ImageEditor::operator-=(const Color& c) {
+ImageEditor &ImageEditor::operator-=(const Color &c) {
   return *this += {-c.r, -c.g, -c.b};
 };
 
 // compare to another image
-bool ImageEditor::operator==(const ImageEditor& ie) const {
+bool ImageEditor::operator==(const ImageEditor &ie) const {
   size_t width = pic.width();
   size_t height = pic.height();
 
   for (size_t j = 0; j < height; j++) {
     for (size_t i = 0; i < width; i++) {
-      if (ie.pic.red(i, j) != pic.red(i, j)) return false;
-      if (ie.pic.green(i, j) != pic.green(i, j)) return false;
-      if (ie.pic.blue(i, j) != pic.blue(i, j)) return false;
+      if (ie.pic.red(i, j) != pic.red(i, j))
+        return false;
+      if (ie.pic.green(i, j) != pic.green(i, j))
+        return false;
+      if (ie.pic.blue(i, j) != pic.blue(i, j))
+        return false;
     }
   }
   return true;
 };
 
 // compare to another image
-bool ImageEditor::operator!=(const ImageEditor& ie) const {
+bool ImageEditor::operator!=(const ImageEditor &ie) const {
   return !(*this == ie);
 };
 
 // expand by factor of n by n
-ImageEditor& ImageEditor::operator*=(unsigned int n) {
-  if (n < 1 || n > 10) throw runtime_error("N must be from 1 to 10");
+ImageEditor &ImageEditor::operator*=(unsigned int n) {
+  if (n < 1 || n > 10)
+    throw runtime_error("N must be from 1 to 10");
 
   Picture picOut(pic.width() * n, pic.height() * n);
   size_t width = pic.width();
@@ -198,7 +202,7 @@ void ImageEditor::sobelFilter(const size_t strength) {
   const size_t width = pic.width();
   const size_t height = pic.height();
 
-  const size_t kSize = strength % 2 ? strength : strength - 1;
+  //   const size_t kSize = strength % 2 ? strength : strength - 1;
 
   const array<int, 3> sobelFilterXComponent = {-1, 0, 1};
   const array<int, 3> sobelFilterYComponent = {1, 2, 1};
@@ -248,10 +252,9 @@ void ImageEditor::sobelFilter(const size_t strength) {
   }
 };
 
-void ImageEditor::ascii(const string& outFileName) {
-  const string asciiSorted =
-      "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/"
-      "\\|()1{}[]?-_+~<>i!lI;:,\"^`'. ";
+void ImageEditor::ascii(const string &outFileName) {
+  const string asciiSorted = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/"
+                             "\\|()1{}[]?-_+~<>i!lI;:,\"^`'. ";
 
   stringstream ss;
   size_t width = pic.width();
@@ -287,7 +290,7 @@ void ImageEditor::ascii(const string& outFileName) {
   out.close();
 }
 
-void ImageEditor::createTestImage(const string& outFileName) {
+void ImageEditor::createTestImage(const string &outFileName) {
   size_t width = pic.width();
   size_t height = pic.height();
   bool isBlack = 1;
