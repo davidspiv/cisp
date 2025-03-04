@@ -112,7 +112,6 @@ ImageEditor& ImageEditor::operator*=(unsigned int n) {
   }
 
   pic = picOut;
-
   return *this;
 }
 
@@ -126,6 +125,7 @@ void ImageEditor::grayscaleViaLightness() {
     for (size_t i = 0; i < width; i++) {
       Color c = {pic.red(i, j), pic.green(i, j), pic.blue(i, j)};
       const double lightness = calcLightness(c);
+      // is it correct to linearly scale lightness up to RGB range??
       const int grayComponent = scaleValue(lightness, 100, 255);
       pic.set(i, j, grayComponent, grayComponent, grayComponent);
     }
@@ -150,7 +150,7 @@ void ImageEditor::gaussianBlur(const size_t strength) {
   // in the target image; this optimization is essential for larger photos
 
   // used both as an 1 x kSize kernel and a transposed kSize x 1 kernel
-  vector<double> gaussianProduct = calcGaussianKernelProduct(kSize);
+  vector<double> gaussianKernelComponent = calcGaussianKernelComponent(kSize);
 
   //  horizontal first pass writes to temporary picture object
   for (size_t j = 0; j < height; j++) {
@@ -160,7 +160,7 @@ void ImageEditor::gaussianBlur(const size_t strength) {
       double bSum = 0;
 
       for (int k = -kRadius; k <= kRadius; k++) {
-        double weight = gaussianProduct[k + kRadius];
+        double weight = gaussianKernelComponent[k + kRadius];
         size_t pixel = mirrorPixel(i + k, width);
 
         rSum += weight * pic.red(pixel, j);
@@ -180,7 +180,7 @@ void ImageEditor::gaussianBlur(const size_t strength) {
       double bSum = 0;
 
       for (int k = -kRadius; k <= kRadius; k++) {
-        double weight = gaussianProduct[k + kRadius];
+        double weight = gaussianKernelComponent[k + kRadius];
         size_t pixel = mirrorPixel(j + k, height);
 
         rSum += weight * tempPic.red(i, pixel);
@@ -193,43 +193,57 @@ void ImageEditor::gaussianBlur(const size_t strength) {
   }
 }
 
-// refactor like gaussianBlur
-void ImageEditor::sobelFilter() {
+// picture is grayscale
+void ImageEditor::sobelFilter(const size_t strength) {
   const size_t width = pic.width();
   const size_t height = pic.height();
   Picture newPic = pic;
 
-  const array<array<int, 3>, 3> gX = {{{1, 0, -1}, {2, 0, -2}, {1, 0, -1}}};
-  const array<array<int, 3>, 3> gY = {{{1, 2, 1}, {0, 0, 0}, {-1, -2, -1}}};
+  array<int, 3> gX = {1, 0, -1};
+  array<int, 3> gY = {1, 2, 1};
   const int kRadius = 1;
 
   for (size_t j = kRadius; j < height - kRadius; j++) {
     for (size_t i = kRadius; i < width - kRadius; i++) {
-      if (pic.red(i, j) != pic.green(i, j) || pic.red(i, j) != pic.blue(i, j)) {
-        throw invalid_argument("non-grayscale pixel detected");
-      }
-
       double xSum = 0;
       double ySum = 0;
 
-      for (int l = -kRadius; l <= kRadius; l++) {
-        for (int k = -kRadius; k <= kRadius; k++) {
-          const int xWeight = gX[l + kRadius][k + kRadius];
-          const int yWeight = gY[l + kRadius][k + kRadius];
+      for (int k = -kRadius; k <= kRadius; k++) {
+        const int xWeight = gX[k + kRadius];
+        const int yWeight = gY[k + kRadius];
+        size_t pixel = mirrorPixel(i + k, width);
 
-          xSum += xWeight * pic.red(i + k, j + l);
-          ySum += yWeight * pic.red(i + k, j + l);
-        }
+        xSum += xWeight * pic.red(pixel, j);
+        ySum += yWeight * pic.red(pixel, j);
       }
 
       const double mag = sqrt(xSum * xSum + ySum * ySum);
-      const size_t grey = clamp(mag, 255);
+      const size_t channel = clamp(mag, 255);
 
-      newPic.set(i, j, grey, grey, grey);
+      newPic.set(i, j, channel, channel, channel);
     }
   }
 
-  this->pic = newPic;
+  for (size_t j = 0; j < height; j++) {
+    for (size_t i = 0; i < width; i++) {
+      double xSum = 0;
+      double ySum = 0;
+
+      for (int k = -kRadius; k <= kRadius; k++) {
+        const int xWeight = gX[k + kRadius];
+        const int yWeight = gY[k + kRadius];
+        size_t pixel = mirrorPixel(j + k, height);
+
+        xSum += xWeight * pic.red(i, pixel);
+        ySum += yWeight * pic.red(i, pixel);
+      }
+
+      const double mag = sqrt(xSum * xSum + ySum * ySum);
+      const size_t channel = clamp(mag, 255);
+
+      pic.set(i, j, channel, channel, channel);
+    }
+  }
 };
 
 void ImageEditor::ascii(const string& outFileName) {
@@ -291,3 +305,9 @@ void ImageEditor::createTestImage(const string& outFileName) {
 
   pic.save("testImage.PNG");
 };
+
+  // kSize will be rounded down to an odd number to keep target pixel centered
+  //   const size_t kSize = strength % 2 ? strength : strength - 1;
+  //   const array<array<int, 3>, 3> gX = {{{1, 0, -1}, {2, 0, -2}, {1, 0,
+  //   -1}}}; const array<array<int, 3>, 3> gY = {{{1, 2, 1}, {0, 0, 0}, {-1,
+  //   -2, -1}}};

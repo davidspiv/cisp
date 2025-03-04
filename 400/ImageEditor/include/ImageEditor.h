@@ -18,7 +18,7 @@ class ImageEditor {
   void grayscaleViaLuminance();
   void grayscaleViaLightness();
   void gaussianBlur(size_t kSize = 3);
-  void sobelFilter();
+  void sobelFilter(const size_t strength);
 
   ImageEditor&
   operator-();  // Invert all colors and return *this (image negative)

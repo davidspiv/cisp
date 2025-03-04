@@ -42,7 +42,7 @@ size_t clamp(double x, size_t max) {
   return x;
 }
 
-vector<double> calcGaussianKernelProduct(int size) {
+vector<double> calcGaussianKernelComponent(size_t size) {
   double sigma = (size - 1) / 6.0;
 
   vector<double> kernel(size, 0);
@@ -57,10 +57,21 @@ vector<double> calcGaussianKernelProduct(int size) {
 
   // Normalize the kernel
   transform(kernel.begin(), kernel.end(), kernel.begin(),
-            [sum](int val) { return (val / sum); });
+            [sum](double val) { return (val / sum); });
 
   return kernel;
 }
+
+// vector<double> calcSobelKernelProduct(size_t size) {
+//   vector<double> kernel(size, 0);
+//   int radius = size / 2;
+
+//   for (int i = -radius; i <= radius; i++) {
+//     kernel[i + radius] = i;
+//   }
+
+//   return kernel;
+// }
 
 int mirrorPixel(int x, int max) {
   if (x < 0) return -x;                    // Mirror left/top side

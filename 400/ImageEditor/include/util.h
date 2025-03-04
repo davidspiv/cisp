@@ -6,7 +6,9 @@ double calcLightness(Color c);
 
 // creates a 1D matrix that, when multiplied by its transposed counterpart
 // will create a normalized gaussian kernel of arbitrary size
-vector<double> calcGaussianKernelProduct(int size);
+vector<double> calcGaussianKernelComponent(size_t size);
+
+vector<double> calcSobelKernelProduct(size_t size);
 
 // effectively "tiles" picture on a per-pixel basis to avoid bounds-errors when
 // sampling near the edge

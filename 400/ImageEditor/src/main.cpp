@@ -6,10 +6,10 @@
 using namespace std;
 int main() {
   ImageEditor imageEditor("pikachu.png");
-  //   imageEditor.grayscaleViaLightness();
-  imageEditor.gaussianBlur(21);
-  //   imageEditor.sobelFilter();
+  imageEditor.grayscaleViaLightness();
+  //   imageEditor.gaussianBlur(8);
+    imageEditor.sobelFilter(3);
   //   -imageEditor;
   imageEditor.save("result.png");
-  //   imageEditor.ascii("result.txt");
+//   imageEditor.ascii("result.txt");
 }
