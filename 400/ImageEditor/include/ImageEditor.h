@@ -15,9 +15,9 @@ class ImageEditor {
   void save(const string& outFileName);
   void ascii(const string& outFileName);
   void createTestImage(const string& outFileName);
-  void graysBasic();
-  void graysViaLightness();
-  void gaussianBlur();
+  void grayscaleViaLuminance();
+  void grayscaleViaLightness();
+  void gaussianBlur(size_t kSize = 3);
   void sobelFilter();
 
   ImageEditor&

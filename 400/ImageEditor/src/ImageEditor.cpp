@@ -1,8 +1,8 @@
 #include "../include/ImageEditor.h"
 
 #include <array>
+#include <cmath>
 #include <fstream>
-#include <numeric>
 #include <sstream>
 #include <string>
 
@@ -73,6 +73,7 @@ ImageEditor& ImageEditor::operator-=(const Color& c) {
 bool ImageEditor::operator==(const ImageEditor& ie) const {
   size_t width = pic.width();
   size_t height = pic.height();
+
   for (size_t j = 0; j < height; j++) {
     for (size_t i = 0; i < width; i++) {
       if (ie.pic.red(i, j) != pic.red(i, j)) return false;
@@ -101,6 +102,7 @@ ImageEditor& ImageEditor::operator*=(unsigned int n) {
       int red = pic.red(i, j);
       int green = pic.green(i, j);
       int blue = pic.blue(i, j);
+
       for (size_t k = 0; k < n; k++) {
         for (size_t l = 0; l < n; l++) {
           picOut.set(i * n + k, j * n + l, red, green, blue);
@@ -114,9 +116,9 @@ ImageEditor& ImageEditor::operator*=(unsigned int n) {
   return *this;
 }
 
-void ImageEditor::graysBasic() { pic = pic.grays(); }
+void ImageEditor::grayscaleViaLuminance() { pic = pic.grays(); }
 
-void ImageEditor::graysViaLightness() {
+void ImageEditor::grayscaleViaLightness() {
   size_t width = pic.width();
   size_t height = pic.height();
 
@@ -124,61 +126,74 @@ void ImageEditor::graysViaLightness() {
     for (size_t i = 0; i < width; i++) {
       Color c = {pic.red(i, j), pic.green(i, j), pic.blue(i, j)};
       const double lightness = calcLightness(c);
-      const int grayComponent = scaleRange(lightness, 100, 255);
+      const int grayComponent = scaleValue(lightness, 100, 255);
       pic.set(i, j, grayComponent, grayComponent, grayComponent);
     }
   }
 };
 
-void ImageEditor::gaussianBlur() {
+void ImageEditor::gaussianBlur(size_t kSize) {
+  Picture tempPic = pic;
   const size_t width = pic.width();
   const size_t height = pic.height();
-  Picture newPic = pic;
 
-  const array<array<int, 5>, 5> gaussianKernel = {{{1, 4, 7, 4, 1},
-                                                   {4, 16, 26, 16, 4},
-                                                   {7, 26, 41, 26, 7},
-                                                   {4, 16, 26, 16, 4},
-                                                   {1, 4, 7, 4, 1}}};
-  const size_t kSize = gaussianKernel.size();
+  // kSize will be rounded up to an odd number to keep target pixel centered
+  if (!(kSize % 2)) kSize--;
+
+  // half the matrix not including the center
   const int kRadius = kSize / 2;
-  const double kSum =
-      accumulate(gaussianKernel.begin(), gaussianKernel.end(), 0,
-                 [](int sum, const array<int, kSize>& row) {
-                   return sum + accumulate(row.begin(), row.end(), 0);
-                 });
 
-  for (size_t j = kRadius; j < height - kRadius; j++) {
-    for (size_t i = kRadius; i < width - kRadius; i++) {
+  // a gaussian kernel is separable which means we can use it's products to
+  // perform two separate convolutions on the picture. We then multiply the
+  // results of both operations together to get an equivalent result, saving a
+  // 4th inner loop. We are sampling kSize * kSize pixels to create each pixel
+  // in the target image; this optimization is essential for larger photos
+
+  // used both as an 1 x kSize kernel and a transposed kSize x 1 kernel
+  vector<double> gaussianProduct = calcGaussianKernelProduct(kSize);
+
+  //  horizontal first pass writes to temporary picture object
+  for (size_t j = 0; j < height; j++) {
+    for (size_t i = 0; i < width; i++) {
       double rSum = 0;
-      double bSum = 0;
       double gSum = 0;
+      double bSum = 0;
 
-      for (int l = -kRadius; l <= kRadius; l++) {
-        for (int k = -kRadius; k <= kRadius; k++) {
-          const int weight = gaussianKernel[l + kRadius][k + kRadius];
+      for (int k = -kRadius; k <= kRadius; k++) {
+        double weight = gaussianProduct[k + kRadius];
+        size_t pixel = mirrorPixel(i + k, width);
 
-          rSum += weight * pic.red(i + k, j + l);
-          gSum += weight * pic.green(i + k, j + l);
-          bSum += weight * pic.blue(i + k, j + l);
-        }
+        rSum += weight * pic.red(pixel, j);
+        gSum += weight * pic.green(pixel, j);
+        bSum += weight * pic.blue(pixel, j);
       }
 
-      const double rAvg = rSum / kSum;
-      const double gAvg = gSum / kSum;
-      const double bAvg = bSum / kSum;
-
-      const int r = static_cast<int>(rAvg);
-      const int g = static_cast<int>(gAvg);
-      const int b = static_cast<int>(bAvg);
-
-      newPic.set(i, j, r, g, b);
+      tempPic.set(i, j, rSum, gSum, bSum);
     }
   }
 
-  this->pic = newPic;
-};
+  // vertical second pass writes directly to final picture object
+  for (size_t j = 0; j < height; j++) {
+    for (size_t i = 0; i < width; i++) {
+      double rSum = 0;
+      double gSum = 0;
+      double bSum = 0;
 
+      for (int k = -kRadius; k <= kRadius; k++) {
+        double weight = gaussianProduct[k + kRadius];
+        size_t pixel = mirrorPixel(j + k, height);
+
+        rSum += weight * tempPic.red(i, pixel);
+        gSum += weight * tempPic.green(i, pixel);
+        bSum += weight * tempPic.blue(i, pixel);
+      }
+
+      pic.set(i, j, rSum, gSum, bSum);
+    }
+  }
+}
+
+// refactor like gaussianBlur
 void ImageEditor::sobelFilter() {
   const size_t width = pic.width();
   const size_t height = pic.height();
@@ -187,11 +202,6 @@ void ImageEditor::sobelFilter() {
   const array<array<int, 3>, 3> gX = {{{1, 0, -1}, {2, 0, -2}, {1, 0, -1}}};
   const array<array<int, 3>, 3> gY = {{{1, 2, 1}, {0, 0, 0}, {-1, -2, -1}}};
   const int kRadius = 1;
-
-  //   const double kSum = accumulate(
-  //       gX.begin(), gX.end(), 0, [](int sum, const array<int, kSize>& row) {
-  //         return sum + accumulate(row.begin(), row.end(), 0);
-  //       });
 
   for (size_t j = kRadius; j < height - kRadius; j++) {
     for (size_t i = kRadius; i < width - kRadius; i++) {
@@ -212,8 +222,8 @@ void ImageEditor::sobelFilter() {
         }
       }
 
-      const double mag = sqrt(pow(xSum, 2) + pow(ySum, 2));
-      const size_t grey = static_cast<int>(mag);
+      const double mag = sqrt(xSum * xSum + ySum * ySum);
+      const size_t grey = clamp(mag, 255);
 
       newPic.set(i, j, grey, grey, grey);
     }
@@ -244,8 +254,8 @@ void ImageEditor::ascii(const string& outFileName) {
       pixNum++;
 
       if (!(j % 6) && !(i % 3)) {
-        const int avg = pixSum / pixNum;
-        ss << asciiSorted[scaleRange(avg, 255, asciiSorted.length() - 1)];
+        const double avg = pixSum / pixNum;
+        ss << asciiSorted[scaleValue(avg, 255, asciiSorted.length() - 1)];
         pixSum = pixNum = 0;
       }
     }
