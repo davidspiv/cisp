@@ -8,8 +8,8 @@ int main() {
   ImageEditor imageEditor("pikachu.png");
   imageEditor.grayscaleViaLightness();
   //   imageEditor.gaussianBlur(8);
-    imageEditor.sobelFilter(3);
+  imageEditor.sobelFilter(3);
   //   -imageEditor;
   imageEditor.save("result.png");
-//   imageEditor.ascii("result.txt");
+  //   imageEditor.ascii("result.txt");
 }

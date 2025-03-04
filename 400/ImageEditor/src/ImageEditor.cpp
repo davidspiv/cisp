@@ -197,45 +197,47 @@ void ImageEditor::gaussianBlur(const size_t strength) {
 void ImageEditor::sobelFilter(const size_t strength) {
   const size_t width = pic.width();
   const size_t height = pic.height();
-  Picture newPic = pic;
 
-  array<int, 3> gX = {1, 0, -1};
-  array<int, 3> gY = {1, 2, 1};
+  const size_t kSize = strength % 2 ? strength : strength - 1;
+
+  const array<int, 3> sobelFilterXComponent = {-1, 0, 1};
+  const array<int, 3> sobelFilterYComponent = {1, 2, 1};
   const int kRadius = 1;
 
-  for (size_t j = kRadius; j < height - kRadius; j++) {
-    for (size_t i = kRadius; i < width - kRadius; i++) {
-      double xSum = 0;
-      double ySum = 0;
+  // use vector of ints; intermediate values will be truncated at 255 with pic
+  // object
+  vector<vector<int>> buffY(height, vector<int>(width, 0));
+  vector<vector<int>> buffX(height, vector<int>(width, 0));
+
+  // First pass: horizontal filtering
+  for (size_t j = 0; j < height; j++) {
+    for (size_t i = 0; i < width; i++) {
+      int xSum = 0;
+      int ySum = 0;
 
       for (int k = -kRadius; k <= kRadius; k++) {
-        const int xWeight = gX[k + kRadius];
-        const int yWeight = gY[k + kRadius];
         size_t pixel = mirrorPixel(i + k, width);
 
-        xSum += xWeight * pic.red(pixel, j);
-        ySum += yWeight * pic.red(pixel, j);
+        xSum += sobelFilterXComponent[k + kRadius] * pic.red(pixel, j);
+        ySum += sobelFilterYComponent[k + kRadius] * pic.red(pixel, j);
       }
 
-      const double mag = sqrt(xSum * xSum + ySum * ySum);
-      const size_t channel = clamp(mag, 255);
-
-      newPic.set(i, j, channel, channel, channel);
+      buffX[j][i] = xSum;
+      buffY[j][i] = ySum;
     }
   }
 
+  // Second pass: vertical filtering
   for (size_t j = 0; j < height; j++) {
     for (size_t i = 0; i < width; i++) {
-      double xSum = 0;
-      double ySum = 0;
+      int xSum = 0;
+      int ySum = 0;
 
       for (int k = -kRadius; k <= kRadius; k++) {
-        const int xWeight = gX[k + kRadius];
-        const int yWeight = gY[k + kRadius];
         size_t pixel = mirrorPixel(j + k, height);
 
-        xSum += xWeight * pic.red(i, pixel);
-        ySum += yWeight * pic.red(i, pixel);
+        xSum += sobelFilterYComponent[k + kRadius] * buffX[pixel][i];
+        ySum += sobelFilterXComponent[k + kRadius] * buffY[pixel][i];
       }
 
       const double mag = sqrt(xSum * xSum + ySum * ySum);
@@ -306,8 +308,8 @@ void ImageEditor::createTestImage(const string& outFileName) {
   pic.save("testImage.PNG");
 };
 
-  // kSize will be rounded down to an odd number to keep target pixel centered
-  //   const size_t kSize = strength % 2 ? strength : strength - 1;
-  //   const array<array<int, 3>, 3> gX = {{{1, 0, -1}, {2, 0, -2}, {1, 0,
-  //   -1}}}; const array<array<int, 3>, 3> gY = {{{1, 2, 1}, {0, 0, 0}, {-1,
-  //   -2, -1}}};
+// kSize will be rounded down to an odd number to keep target pixel centered
+//   const size_t kSize = strength % 2 ? strength : strength - 1;
+//   const array<array<int, 3>, 3> gY = {{{1, 0, -1}, {2,
+//   0, -2}, {1, 0, -1}}}; const array<array<int, 3>, 3> gX =
+//   {{{1, 2, 1}, {0, 0, 0}, {-1, -2, -1}}};
