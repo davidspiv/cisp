@@ -14,5 +14,5 @@ Matrices.o: Matrices.cpp
 clean:
 	rm *.o $(EXENAME)
 
-run:
+run: default
 	./$(EXENAME)

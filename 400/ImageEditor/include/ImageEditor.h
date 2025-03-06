@@ -9,25 +9,27 @@ struct Color {
 };
 
 class ImageEditor {
- public:
-  explicit ImageEditor(const string& inFileName);
-  void save(const string& outFileName);
-  void ascii(const string& outFileName);
-  void createTestImage(const string& outFileName);
+public:
+  explicit ImageEditor(const string &inFileName);
+  void save(const string &outFileName);
+  void asciiPrep();
+  void ascii(const string &outFileName);
+  void createTestImage(const string &outFileName);
   void grayscaleViaLuminance();
   void grayscaleViaLightness();
+  void dither();
   void gaussianBlur(size_t kSize = 3);
-  void sobelFilter(const size_t strength);
+  void sobelOperator();
 
-  ImageEditor&
-  operator-();  // Invert all colors and return *this (image negative)
-  ImageEditor& operator-=(const Color& c);       // subtract c from all pixels
-  ImageEditor& operator+=(const Color& c);       // add c to all pixels
-  bool operator==(const ImageEditor& ie) const;  // compare to another image
-  bool operator!=(const ImageEditor& ie) const;  // compare to another image
-  ImageEditor& operator*=(unsigned int n);       // expand by factor of n by n
+  ImageEditor &
+  operator-(); // Invert all colors and return *this (image negative)
+  ImageEditor &operator-=(const Color &c);      // subtract c from all pixels
+  ImageEditor &operator+=(const Color &c);      // add c to all pixels
+  bool operator==(const ImageEditor &ie) const; // compare to another image
+  bool operator!=(const ImageEditor &ie) const; // compare to another image
+  ImageEditor &operator*=(unsigned int n);      // expand by factor of n by n
 
- private:
+private:
   // void swapPixels(int x1, int y1, int x2, int y2);
   Picture pic;
 };

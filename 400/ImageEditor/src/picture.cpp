@@ -21,7 +21,7 @@ Picture::Picture(int width, int height, int red, int green, int blue)
   }
 }
 
-Picture::Picture(const vector<vector<int> >& grays) {
+Picture::Picture(const vector<vector<int>> &grays) {
   if (grays.size() == 0 || grays[0].size() == 0) {
     _width = 0;
     _height = 0;
@@ -45,14 +45,16 @@ Picture::Picture(const vector<vector<int> >& grays) {
 Picture::Picture(string filename) {
   unsigned int w, h;
   unsigned error = lodepng::decode(_values, w, h, filename.c_str());
-  if (error != 0) throw runtime_error(lodepng_error_text(error));
+  if (error != 0)
+    throw runtime_error(lodepng_error_text(error));
   _width = w;
   _height = h;
 }
 
 void Picture::save(string filename) const {
   unsigned error = lodepng::encode(filename.c_str(), _values, _width, _height);
-  if (error != 0) throw runtime_error(lodepng_error_text(error));
+  if (error != 0)
+    throw runtime_error(lodepng_error_text(error));
 }
 
 int Picture::red(int x, int y) const {
@@ -87,7 +89,7 @@ void Picture::set(int x, int y, int red, int green, int blue) {
   }
 }
 
-void Picture::add(const Picture& other, int x, int y) {
+void Picture::add(const Picture &other, int x, int y) {
   ensure(x + other._width - 1, y + other._height - 1);
   int k = 0;
   for (int dy = 0; dy < other._height; dy++)
@@ -98,8 +100,8 @@ void Picture::add(const Picture& other, int x, int y) {
     }
 }
 
-vector<vector<int> > Picture::grays() const {
-  vector<vector<int> > result(_height);
+vector<vector<int>> Picture::grays() const {
+  vector<vector<int>> result(_height);
   for (int y = 0; y < _height; y++) {
     result[y] = vector<int>(_width);
     for (int x = 0; x < _width; x++) {
@@ -119,7 +121,7 @@ void Picture::ensure(int x, int y) {
     int new_width = max(x + 1, _width);
     int new_height = max(y + 1, _height);
     vector<unsigned char> new_values(4 * new_width * new_height);
-    fill(new_values.begin(), new_values.end(), 255);  // fill with white
+    fill(new_values.begin(), new_values.end(), 255); // fill with white
     int j = 0;
     for (int dy = 0; dy < _height; dy++)
       for (int dx = 0; dx < _width; dx++)

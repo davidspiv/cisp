@@ -48,40 +48,40 @@ void ImageEditor::gaussianBlur(const size_t strength) {
   //  horizontal first pass writes to temporary picture object
   for (size_t j = 0; j < height; j++) {
     for (size_t i = 0; i < width; i++) {
-      double rSum = 0;
-      double gSum = 0;
-      double bSum = 0;
+      double rWeightedAvg = 0;
+      double gWeightedAvg = 0;
+      double bWeightedAvg = 0;
 
       for (int k = -kRadius; k <= kRadius; k++) {
-        double weight = gaussianKernelComponent[k + kRadius];
-        size_t pixel = mirrorPixel(i + k, width);
+        const double weight = gaussianKernelComponent[k + kRadius];
+        const size_t pixel = mirrorPixel(i + k, width);
 
-        rSum += weight * pic.red(pixel, j);
-        gSum += weight * pic.green(pixel, j);
-        bSum += weight * pic.blue(pixel, j);
+        rWeightedAvg += weight * pic.red(pixel, j);
+        gWeightedAvg += weight * pic.green(pixel, j);
+        bWeightedAvg += weight * pic.blue(pixel, j);
       }
 
-      tempPic.set(i, j, rSum, gSum, bSum);
+      tempPic.set(i, j, rWeightedAvg, gWeightedAvg, bWeightedAvg);
     }
   }
 
   // vertical second pass writes directly to final picture object
   for (size_t j = 0; j < height; j++) {
     for (size_t i = 0; i < width; i++) {
-      double rSum = 0;
-      double gSum = 0;
-      double bSum = 0;
+      double rWeightedAvg = 0;
+      double gWeightedAvg = 0;
+      double bWeightedAvg = 0;
 
       for (int k = -kRadius; k <= kRadius; k++) {
-        double weight = gaussianKernelComponent[k + kRadius];
-        size_t pixel = mirrorPixel(j + k, height);
+        const double weight = gaussianKernelComponent[k + kRadius];
+        const size_t pixel = mirrorPixel(j + k, height);
 
-        rSum += weight * tempPic.red(i, pixel);
-        gSum += weight * tempPic.green(i, pixel);
-        bSum += weight * tempPic.blue(i, pixel);
+        rWeightedAvg += weight * tempPic.red(i, pixel);
+        gWeightedAvg += weight * tempPic.green(i, pixel);
+        bWeightedAvg += weight * tempPic.blue(i, pixel);
       }
 
-      pic.set(i, j, rSum, gSum, bSum);
+      pic.set(i, j, rWeightedAvg, gWeightedAvg, bWeightedAvg);
     }
   }
 }
@@ -90,67 +90,55 @@ void ImageEditor::gaussianBlur(const size_t strength) {
 // SOBEL
 
 // picture is grayscale
-void ImageEditor::sobelFilter(const size_t strength) {
+void ImageEditor::sobelOperator() {
   const size_t width = pic.width();
   const size_t height = pic.height();
 
-  //   const size_t kSize = strength % 2 ? strength : strength - 1;
+  const array<double, 3> sobelKernalProductA = {-.5, 0, .5};
+  const array<double, 3> sobelKernalProductB = {.5, 1, .5};
 
-  const array<int, 3> sobelFilterXComponent = {-1, 0, 1};
-  const array<int, 3> sobelFilterYComponent = {1, 2, 1};
-  const int kRadius = 1;
-
-  // use vector of ints; intermediate values will be truncated at 255 with pic
-  // object
-  vector<vector<int>> buffY(height, vector<int>(width, 0));
-  vector<vector<int>> buffX(height, vector<int>(width, 0));
+  // using pic object as buffer results in significant truncation of
+  // intermediate values, use int vector instead
+  vector<vector<int>> yGrads(height, vector<int>(width, 0));
+  vector<vector<int>> xGrads(height, vector<int>(width, 0));
 
   // First pass: horizontal filtering
   for (size_t j = 0; j < height; j++) {
     for (size_t i = 0; i < width; i++) {
-      int xSum = 0;
-      int ySum = 0;
+      int xGrad = 0;
+      int yGrad = 0;
 
-      for (int k = -kRadius; k <= kRadius; k++) {
+      for (int k = -1; k <= 1; k++) {
         size_t pixel = mirrorPixel(i + k, width);
 
-        xSum += sobelFilterXComponent[k + kRadius] * pic.red(pixel, j);
-        ySum += sobelFilterYComponent[k + kRadius] * pic.red(pixel, j);
+        xGrad += sobelKernalProductA[k + 1] * pic.red(pixel, j);
+        yGrad += sobelKernalProductB[k + 1] * pic.red(pixel, j);
       }
 
-      buffX[j][i] = xSum;
-      buffY[j][i] = ySum;
+      xGrads[j][i] = xGrad;
+      yGrads[j][i] = yGrad;
     }
   }
 
   // Second pass: vertical filtering
   for (size_t j = 0; j < height; j++) {
     for (size_t i = 0; i < width; i++) {
-      int xSum = 0;
-      int ySum = 0;
+      int xGrad = 0;
+      int yGrad = 0;
 
-      for (int k = -kRadius; k <= kRadius; k++) {
+      for (int k = -1; k <= 1; k++) {
         size_t pixel = mirrorPixel(j + k, height);
 
-        xSum += sobelFilterYComponent[k + kRadius] * buffX[pixel][i];
-        ySum += sobelFilterXComponent[k + kRadius] * buffY[pixel][i];
+        xGrad += sobelKernalProductB[k + 1] * xGrads[pixel][i];
+        yGrad += sobelKernalProductA[k + 1] * yGrads[pixel][i];
       }
 
-      const double mag = sqrt(xSum * xSum + ySum * ySum);
-      const size_t channel = clamp(mag, 255);
+      // pythagorean addition
+      const double gradMagnitude = sqrt(xGrad * xGrad + yGrad * yGrad);
 
-      pic.set(i, j, channel, channel, channel);
+      const unsigned char c = std::min(gradMagnitude, 255.0);
+
+      pic.set(i, j, c, c, c);
     }
   }
 };
-
-// vector<double> calcSobelKernelProduct(size_t size) {
-//   vector<double> kernel(size, 0);
-//   int radius = size / 2;
-
-//   for (int i = -radius; i <= radius; i++) {
-//     kernel[i + radius] = i;
-//   }
-
-//   return kernel;
-// }
