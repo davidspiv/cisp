@@ -9,7 +9,7 @@
 using namespace std;
 
 class Picture {
- public:
+public:
   /**
      Constructs a picture with width and height zero.
   */
@@ -37,7 +37,7 @@ class Picture {
      Constructs a picture from a two-dimensional vector of gray levels. @param
      grays the gray levels
   */
-  Picture(const vector<vector<int> >& grays);
+  Picture(const vector<vector<int>> &grays);
 
   /**
      Returns the width of this picture.
@@ -99,7 +99,7 @@ class Picture {
      Yields the gray levels of all pixels of this image.
      @return a 2D array of gray values (between 0 and 255)
   */
-  vector<vector<int> > grays() const;
+  vector<vector<int>> grays() const;
 
   /**
      Adds a picture to this picture at a given position, expanding
@@ -108,9 +108,11 @@ class Picture {
      @param x the x-coordinate (column) of the top left corner
      @param y the y-coordinate (row) of the top left corner
   */
-  void add(const Picture& other, int x = 0, int y = 0);
+  void add(const Picture &other, int x = 0, int y = 0);
 
- private:
+  void Scale(const size_t factor);
+
+private:
   void ensure(int x, int y);
 
   vector<unsigned char> _values;

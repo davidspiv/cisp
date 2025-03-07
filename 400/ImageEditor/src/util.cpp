@@ -21,7 +21,7 @@ int mirrorPixel(int x, int max) {
 }
 
 unsigned char quantizeChannel(unsigned char channel) {
-  const int regions = 8;
+  const int regions = 7;
   const double regionSize = 255.0 / (regions - 1.0);
 
   int quantized = round(channel / regionSize);               // scale down

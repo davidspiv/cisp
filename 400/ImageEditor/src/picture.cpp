@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <stdexcept>
+#include <vector>
 
 Picture::Picture() {
   _width = 0;
@@ -56,6 +57,7 @@ void Picture::save(string filename) const {
   if (error != 0)
     throw runtime_error(lodepng_error_text(error));
 }
+
 
 int Picture::red(int x, int y) const {
   if (0 <= x && x < _width && 0 <= y && y < _height)

@@ -1,4 +1,5 @@
 #include "../include/ImageEditor.h"
+#include "../include/timer.h"
 
 #include <string>
 
@@ -89,28 +90,41 @@ bool ImageEditor::operator!=(const ImageEditor &ie) const {
 
 // expand by factor of n by n
 ImageEditor &ImageEditor::operator*=(unsigned int n) {
+  Timer timer;
+
   if (n < 1 || n > 10)
     throw runtime_error("N must be from 1 to 10");
 
-  Picture picOut(pic.width() * n, pic.height() * n);
-  size_t width = pic.width();
-  size_t height = pic.height();
+  pic.Scale(n);
 
-  for (size_t j = 0; j < width; j++) {
-    for (size_t i = 0; i < height; i++) {
-      int red = pic.red(i, j);
-      int green = pic.green(i, j);
-      int blue = pic.blue(i, j);
+  //   size_t width = pic.width();
+  //   size_t height = pic.height();
 
-      for (size_t k = 0; k < n; k++) {
-        for (size_t l = 0; l < n; l++) {
-          picOut.set(i * n + k, j * n + l, red, green, blue);
-        }
-      }
-    }
-  }
+  //   Picture picOut(width * n, height * n, 20, 20, 20);
 
-  pic = picOut;
+  //   for (size_t j = 0; j < width; j++) {
+  //     for (size_t i = 0; i < height; i++) {
+  //       int r = pic.red(i, j);
+  //       int g = pic.green(i, j);
+  //       int b = pic.blue(i, j);
+
+  //       for (size_t k = 0; k < n; k++) {
+  //         for (size_t l = 0; l < n; l++) {
+  //           picOut.set(i * n + k, j * n + l, r, g, b);
+  //         }
+  //       }
+  //     }
+  //   }
+
+  //   for (size_t j = 0; j < width * n; j++) {
+  //     for (size_t i = 0; i < height * n; i++) {
+
+
+  //       picOut.set(i, j, 10, 10, 10);
+  //     }
+  //   }
+
+  //   pic = picOut;
   return *this;
 }
 

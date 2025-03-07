@@ -102,6 +102,8 @@ void ImageEditor::sobelOperator() {
   vector<vector<int>> yGrads(height, vector<int>(width, 0));
   vector<vector<int>> xGrads(height, vector<int>(width, 0));
 
+  //   vector<vector<int>> slopes(height, vector<int>(width, 0));
+
   // First pass: horizontal filtering
   for (size_t j = 0; j < height; j++) {
     for (size_t i = 0; i < width; i++) {
@@ -123,8 +125,8 @@ void ImageEditor::sobelOperator() {
   // Second pass: vertical filtering
   for (size_t j = 0; j < height; j++) {
     for (size_t i = 0; i < width; i++) {
-      int xGrad = 0;
-      int yGrad = 0;
+      double xGrad = 0;
+      double yGrad = 0;
 
       for (int k = -1; k <= 1; k++) {
         size_t pixel = mirrorPixel(j + k, height);
@@ -135,8 +137,15 @@ void ImageEditor::sobelOperator() {
 
       // pythagorean addition
       const double gradMagnitude = sqrt(xGrad * xGrad + yGrad * yGrad);
+      const double slope = std::atan2(yGrad, xGrad);
 
-      const unsigned char c = std::min(gradMagnitude, 255.0);
+      // Normalize slope to [0,1] then scale to [0,255] for rbg
+      const double normSlope =
+          std::clamp((slope + M_PI) / (2 * M_PI) * 255.0, 0.0, 255.0);
+
+      const uint8_t c = gradMagnitude > 75 ? normSlope : 0;
+
+      //   slopes[j][i] = c
 
       pic.set(i, j, c, c, c);
     }
