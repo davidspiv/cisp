@@ -20,6 +20,7 @@ public:
   void dither();
   void gaussianBlur(size_t kSize = 3);
   void sobelOperator();
+  void bilinearResize(double factor);
 
   ImageEditor &
   operator-(); // Invert all colors and return *this (image negative)

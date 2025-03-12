@@ -95,34 +95,34 @@ ImageEditor &ImageEditor::operator*=(unsigned int n) {
   if (n < 1 || n > 10)
     throw runtime_error("N must be from 1 to 10");
 
-  pic.Scale(n);
+  //   pic.Scale(n);
 
-  //   size_t width = pic.width();
-  //   size_t height = pic.height();
+  size_t width = pic.width();
+  size_t height = pic.height();
 
-  //   Picture picOut(width * n, height * n, 20, 20, 20);
+  Picture picOut(width * n, height * n, 20, 20, 20);
 
-  //   for (size_t j = 0; j < width; j++) {
-  //     for (size_t i = 0; i < height; i++) {
-  //       int r = pic.red(i, j);
-  //       int g = pic.green(i, j);
-  //       int b = pic.blue(i, j);
+  for (size_t j = 0; j < width; j++) {
+    for (size_t i = 0; i < height; i++) {
+      int r = pic.red(i, j);
+      int g = pic.green(i, j);
+      int b = pic.blue(i, j);
 
-  //       for (size_t k = 0; k < n; k++) {
-  //         for (size_t l = 0; l < n; l++) {
-  //           picOut.set(i * n + k, j * n + l, r, g, b);
-  //         }
-  //       }
-  //     }
-  //   }
+      for (size_t k = 0; k < n; k++) {
+        for (size_t l = 0; l < n; l++) {
+          picOut.set(i * n + k, j * n + l, r, g, b);
+        }
+      }
+    }
+  }
 
-  //   for (size_t j = 0; j < width * n; j++) {
-  //     for (size_t i = 0; i < height * n; i++) {
+  for (size_t j = 0; j < width * n; j++) {
+    for (size_t i = 0; i < height * n; i++) {
 
 
-  //       picOut.set(i, j, 10, 10, 10);
-  //     }
-  //   }
+      picOut.set(i, j, 10, 10, 10);
+    }
+  }
 
   //   pic = picOut;
   return *this;

@@ -9,7 +9,8 @@ int main() {
   //   imageEditor.sobelOperator();
   //   imageEditor.dither();
   //   imageEditor.asciiPrep();
-  imageEditor *= 2;
+  //   imageEditor *= 5;
+  imageEditor.bilinearResize(1.5);
   imageEditor.save("result.png");
   //   imageEditor.ascii("result.txt");
 }
