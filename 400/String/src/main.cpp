@@ -1,5 +1,4 @@
 #include <fstream>
-#include <iostream>
 
 #include "../include/string.h"
 using namespace String;
@@ -58,113 +57,98 @@ int main() {
     std::cout << s1 << std::endl;
   }
 
-  //   std::cout << "Testing copy constructor and == with string" << std::endl;
-  //   string s2 = s1;
-  //   if (s2 == s1 && s2 == string("abc") && !(s2 == string("ABc")) &&
-  //       !(s2 == string("abCd")) && !(s2 == string("a"))) {
-  //     std::cout << "Passed.  +1" << std::endl;
-  //     score++;
-  //   } else {
-  //     std::cout << "Failed." << std::endl;
-  //     std::cout << s2 << std::endl;
-  //     std::cout << "Cannot finish testing without string == operator.
-  //     Exiting."
-  //               << std::endl;
-  //     quitTester(score);
-  //   }
-
-  //   std::cout << "Testing copy assignment" << std::endl;
-  //   string s3 = "C++ is the best!";
-  //   s2 = s3;
-  //   if (s3 == s2 && s2 == "C++ is the best!") {
-  //     std::cout << "Passed.  +1" << std::endl;
-  //     score++;
-  //   } else {
-  //     std::cout << "Failed." << std::endl;
-  //     std::cout << s2 << std::endl;
-  //   }
-
-  //   std::cout << "Testing copy assignment using a C String" << std::endl;
-  //   s2 = "C strings are different than C++ strings\n";
-  //   if (s2 == "C strings are different than C++ strings\n") {
-  //     std::cout << "Passed.  +1" << std::endl;
-  //     score++;
-  //   } else {
-  //     std::cout << "Failed." << std::endl;
-  //     std::cout << s2 << std::endl;
-  //   }
-
-  /*std::cout << "Testing insertion << and extraction operators >>" <<
-  std::endl; std::ofstream ofsInsert("testOut.txt"); ofsInsert <<
-  "antidisestablishmentarianism"; ofsInsert.close(); ifstream
-  ifsExtract("testOut.txt"); string extractStr; ifsExtract >> extractStr;
-  if(extractStr == "antidisestablishmentarianism")
-  {
-      std::cout << "Passed.  +2" << std::endl;
-      score+=2;
+  std::cout << "Testing copy constructor and == with string" << std::endl;
+  string s2 = s1;
+  if (s2 == s1 && s2 == string("abc") && !(s2 == string("ABc")) &&
+      !(s2 == string("abCd")) && !(s2 == string("a"))) {
+    std::cout << "Passed.  +1" << std::endl;
+    score++;
+  } else {
+    std::cout << "Failed." << std::endl;
+    std::cout << s2 << std::endl;
+    std::cout << "Cannot finish testing without string == operator.  Exiting."
+              << std::endl;
+    quitTester(score);
   }
-  else
-  {
-      std::cout << "Failed." << std::endl;
-      std::cout << extractStr << std::endl;
-  }*/
 
-  //   std::cout << "Testing str + str" << std::endl;
-  //   s3 = s1 + " " + s2;
-  //   if (s3 == "abc C strings are different than C++ strings\n") {
-  //     std::cout << "Passed.  +1" << std::endl;
-  //     score++;
-  //   } else {
-  //     std::cout << "Failed." << std::endl;
-  //     std::cout << s3 << std::endl;
-  //   }
+  std::cout << "Testing copy assignment" << std::endl;
+  string s3 = "C++ is the best!";
+  s2 = s3;
+  if (s3 == s2 && s2 == "C++ is the best!") {
+    std::cout << "Passed.  +1" << std::endl;
+    score++;
+  } else {
+    std::cout << "Failed." << std::endl;
+    std::cout << s2 << std::endl;
+  }
 
-  /*
+  std::cout << "Testing copy assignment using a C String" << std::endl;
+  s2 = "C strings are different than C++ strings\n";
+  if (s2 == "C strings are different than C++ strings\n") {
+    std::cout << "Passed.  +1" << std::endl;
+    score++;
+  } else {
+    std::cout << "Failed." << std::endl;
+    std::cout << s2 << std::endl;
+  }
+
+  std::cout << "Testing insertion << and extraction operators >>" << std::endl;
+  std::ofstream ofsInsert("testOut.txt");
+  ofsInsert << "antidisestablishmentarianism";
+  ofsInsert.close();
+  std::ifstream ifsExtract("testOut.txt");
+  string extractStr;
+  ifsExtract >> extractStr;
+  if (extractStr == "antidisestablishmentarianism") {
+    std::cout << "Passed.  +2" << std::endl;
+    score += 2;
+  } else {
+    std::cout << "Failed." << std::endl;
+    std::cout << extractStr << std::endl;
+  }
+
+  std::cout << "Testing str + str" << std::endl;
+  s3 = s1 + " " + s2;
+  if (s3 == "abc C strings are different than C++ strings\n") {
+    std::cout << "Passed.  +1" << std::endl;
+    score++;
+  } else {
+    std::cout << "Failed." << std::endl;
+    std::cout << s3 << std::endl;
+  }
+
   std::cout << "Testing str + char" << std::endl;
   s3 = s3 + 'Z';
-  if(s3 == "abc C strings are different than C++ strings\nZ")
-  {
-      std::cout << "Passed.  +1" << std::endl;
-      score++;
+  if (s3 == "abc C strings are different than C++ strings\nZ") {
+    std::cout << "Passed.  +1" << std::endl;
+    score++;
+  } else {
+    std::cout << "Failed." << std::endl;
+    std::cout << s3 << std::endl;
   }
-  else
-  {
-      std::cout << "Failed." << std::endl;
-      std::cout << s3 << std::endl;
-  }
-
 
   std::cout << "Testing >" << std::endl;
-  if(string("apples") > string("apple")
-     && !(string("apple") > string("apple"))
-     && string("zebra") > string("apples")
-     && !(string("apples") > string("zebra")))
-  {
-      std::cout << "Passed.  +1" << std::endl;
-      score++;
+  if (string("apples") > string("apple") &&
+      !(string("apple") > string("apple")) &&
+      string("zebra") > string("apples") &&
+      !(string("apples") > string("zebra"))) {
+    std::cout << "Passed.  +1" << std::endl;
+    score++;
+  } else {
+    std::cout << "Failed." << std::endl;
   }
-  else
-  {
-      std::cout << "Failed." << std::endl;
-  }
-
 
   std::cout << "Testing find" << std::endl;
   string s4 = "Do all dogs chase cats?  Are all dogs good puppers?";
-  if(s4.find("Do") == 0
-     && s4.find("dogs") == 7
-     && s4.find("dogs", 8) == 33
-     && s4.find("puppers?") == s4.size() - 8)
-  {
-      std::cout << "Passed.  +2" << std::endl;
-      score+=2;
+  if (s4.find("Do") == 0 && s4.find("dogs") == 7 && s4.find("dogs", 8) == 33 &&
+      s4.find("puppers?") == s4.size() - 8) {
+    std::cout << "Passed.  +2" << std::endl;
+    score += 2;
+  } else {
+    std::cout << "Failed." << std::endl;
+    std::cout << s4.find("Do") << ' ' << s4.find("dogs") << ' '
+              << s4.find("dogs", 8) << ' ' << s4.find("puppers?") << std::endl;
   }
-  else
-  {
-      std::cout << "Failed." << std::endl;
-      std::cout << s4.find("Do") << ' ' << s4.find("dogs") << ' ' <<
-  s4.find("dogs", 8) << ' ' << s4.find("puppers?") << std::endl;
-  }*/
 
   quitTester(score);
 

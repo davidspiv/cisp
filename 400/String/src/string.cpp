@@ -21,6 +21,18 @@ string::string(const char s[]) {
   }
 }
 
+string::string(const string& other){
+	len = other.len;
+	if (len > 0) {
+	  buffer = new char[len];
+	  for (int i = 0; i < len; i++) {
+		buffer[i] = other.buffer[i];
+	  }
+	} else {
+	  buffer = nullptr;
+	}
+};
+
 string::~string() { delete[] buffer; }
 
 string& string::operator=(const string& other) {
