@@ -14,7 +14,7 @@ namespace String {
 class string {
  public:
   string();
-  explicit string(const char s[]);
+  string(const char s[]);
 
   // big 3
   string(const string& other);
@@ -44,5 +44,6 @@ std::ostream& operator<<(std::ostream& out, const string& str);
 std::istream& operator>>(std::istream& in, string& str);
 bool operator!=(const string& s, const string& t);
 bool operator>(const string& lhs, const string& rhs);
+
 }  // namespace String
 #endif

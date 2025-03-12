@@ -1,5 +1,6 @@
 build/main.o: src/main.cpp /usr/include/stdc-predef.h \
- /usr/include/c++/11/cstring \
+ /usr/include/c++/11/fstream /usr/include/c++/11/istream \
+ /usr/include/c++/11/ios /usr/include/c++/11/iosfwd \
  /usr/include/x86_64-linux-gnu/c++/11/bits/c++config.h \
  /usr/include/x86_64-linux-gnu/c++/11/bits/os_defines.h \
  /usr/include/features.h /usr/include/features-time64.h \
@@ -10,18 +11,14 @@ build/main.o: src/main.cpp /usr/include/stdc-predef.h \
  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
  /usr/include/x86_64-linux-gnu/c++/11/bits/cpu_defines.h \
- /usr/include/c++/11/pstl/pstl_config.h /usr/include/string.h \
- /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
- /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
- /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
- /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
- /usr/include/strings.h /usr/include/c++/11/fstream \
- /usr/include/c++/11/istream /usr/include/c++/11/ios \
- /usr/include/c++/11/iosfwd /usr/include/c++/11/bits/stringfwd.h \
+ /usr/include/c++/11/pstl/pstl_config.h \
+ /usr/include/c++/11/bits/stringfwd.h \
  /usr/include/c++/11/bits/memoryfwd.h /usr/include/c++/11/bits/postypes.h \
  /usr/include/c++/11/cwchar /usr/include/wchar.h \
+ /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
  /usr/include/x86_64-linux-gnu/bits/floatn.h \
  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+ /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
  /usr/include/x86_64-linux-gnu/bits/wchar.h \
  /usr/include/x86_64-linux-gnu/bits/types/wint_t.h \
@@ -29,6 +26,8 @@ build/main.o: src/main.cpp /usr/include/stdc-predef.h \
  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+ /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+ /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
  /usr/include/c++/11/exception /usr/include/c++/11/bits/exception.h \
  /usr/include/c++/11/bits/exception_ptr.h \
  /usr/include/c++/11/bits/exception_defines.h \
@@ -151,7 +150,10 @@ build/main.o: src/main.cpp /usr/include/stdc-predef.h \
  /usr/include/c++/11/bits/fstream.tcc /usr/include/c++/11/iostream \
  src/../include/string.h
 /usr/include/stdc-predef.h:
-/usr/include/c++/11/cstring:
+/usr/include/c++/11/fstream:
+/usr/include/c++/11/istream:
+/usr/include/c++/11/ios:
+/usr/include/c++/11/iosfwd:
 /usr/include/x86_64-linux-gnu/c++/11/bits/c++config.h:
 /usr/include/x86_64-linux-gnu/c++/11/bits/os_defines.h:
 /usr/include/features.h:
@@ -164,23 +166,15 @@ build/main.o: src/main.cpp /usr/include/stdc-predef.h \
 /usr/include/x86_64-linux-gnu/gnu/stubs-64.h:
 /usr/include/x86_64-linux-gnu/c++/11/bits/cpu_defines.h:
 /usr/include/c++/11/pstl/pstl_config.h:
-/usr/include/string.h:
-/usr/include/x86_64-linux-gnu/bits/libc-header-start.h:
-/usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h:
-/usr/include/x86_64-linux-gnu/bits/types/locale_t.h:
-/usr/include/x86_64-linux-gnu/bits/types/__locale_t.h:
-/usr/include/strings.h:
-/usr/include/c++/11/fstream:
-/usr/include/c++/11/istream:
-/usr/include/c++/11/ios:
-/usr/include/c++/11/iosfwd:
 /usr/include/c++/11/bits/stringfwd.h:
 /usr/include/c++/11/bits/memoryfwd.h:
 /usr/include/c++/11/bits/postypes.h:
 /usr/include/c++/11/cwchar:
 /usr/include/wchar.h:
+/usr/include/x86_64-linux-gnu/bits/libc-header-start.h:
 /usr/include/x86_64-linux-gnu/bits/floatn.h:
 /usr/include/x86_64-linux-gnu/bits/floatn-common.h:
+/usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h:
 /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h:
 /usr/include/x86_64-linux-gnu/bits/wchar.h:
 /usr/include/x86_64-linux-gnu/bits/types/wint_t.h:
@@ -188,6 +182,8 @@ build/main.o: src/main.cpp /usr/include/stdc-predef.h \
 /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h:
 /usr/include/x86_64-linux-gnu/bits/types/__FILE.h:
 /usr/include/x86_64-linux-gnu/bits/types/FILE.h:
+/usr/include/x86_64-linux-gnu/bits/types/locale_t.h:
+/usr/include/x86_64-linux-gnu/bits/types/__locale_t.h:
 /usr/include/c++/11/exception:
 /usr/include/c++/11/bits/exception.h:
 /usr/include/c++/11/bits/exception_ptr.h:
