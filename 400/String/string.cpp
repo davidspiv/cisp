@@ -1,5 +1,6 @@
-#include "../include/string.h"
+#include "string.h"
 
+#include <cctype>
 #include <cstring>
 
 using namespace String;
@@ -21,22 +22,22 @@ string::string(const char s[]) {
   }
 }
 
-string::string(const string& other){
-	len = other.len;
-	if (len > 0) {
-	  buffer = new char[len];
-	  for (int i = 0; i < len; i++) {
-		buffer[i] = other.buffer[i];
-	  }
-	} else {
-	  buffer = nullptr;
-	}
+string::string(const string& other) {
+  len = other.len;
+  if (len > 0) {
+    buffer = new char[len];
+    for (int i = 0; i < len; i++) {
+      buffer[i] = other.buffer[i];
+    }
+  } else {
+    buffer = nullptr;
+  }
 };
 
 string::~string() { delete[] buffer; }
 
 string& string::operator=(const string& other) {
-  if (this == &other) return *this;  // check for self-assignment
+  if (this == &other) return *this;
 
   delete[] buffer;
   len = other.len;
@@ -77,6 +78,7 @@ string string::operator+(const string& other) const {
 string string::operator+(const char& ch) const {
   string result;
   result.len = len + 1;
+  result.buffer = new char[result.len];
   for (int i = 0; i < len; i++) {
     result.buffer[i] = buffer[i];
   }
@@ -100,13 +102,6 @@ int string::find(const char* s, int pos) const {
   if (pos >= len) return -1;
   for (int i = pos; i < len; i++) {
     if (buffer[i] != s[0]) continue;
-    // char ch = s[0];
-    // size_t j = 0;
-
-    // while(ch != '\0'){
-    // 	j++;
-    // 	ch = s[j];
-    // }
     return i;
   }
   return -1;
@@ -123,8 +118,29 @@ std::ostream& String::operator<<(std::ostream& out, const string& str) {
   return out;
 }
 
-std::istream& String::operator>>(std::istream& in, string& str) { return in; };
+std::istream& String::operator>>(std::istream& in, string& str) {
+  str = "";
+  char ch;
+  while (in.get(ch) && !isspace(ch)) {
+    str = str + ch;
+  };
+
+  return in;
+}
 
 bool String::operator!=(const string& s, const string& t) { return !(s == t); };
 
-bool String::operator>(const string& lhs, const string& rhs) { return true; };
+bool String::operator>(const string& lhs, const string& rhs) {
+  lhs.length();
+  rhs.length();
+
+  for (int i = 0; i < lhs.length(); i++) {
+    if (rhs[i] == '\0') break;
+
+    if (lhs[i] != rhs[i]) {
+      return lhs[i] > rhs[i];
+    }
+  }
+
+  return lhs.size() > rhs.size();
+};

@@ -2,14 +2,6 @@
 #define STRING_H
 #include <iostream>
 
-// using std::cout;
-// using std::endl;
-// using std::ifstream;
-// using std::istream;
-// using std::ofstream;
-// using std::ostream;
-// using std::streambuf;
-
 namespace String {
 class string {
  public:
