@@ -1,4 +1,4 @@
-#include "string.h"
+#include "../include/string.h"
 
 #include <cctype>
 #include <cstring>
@@ -21,6 +21,25 @@ string::string(const char s[]) {
     buffer = nullptr;
   }
 }
+
+// string::string(const char c) {
+//   len = 1;
+//   buffer = new char[len];
+//   buffer[0] = c;
+// };
+
+// string::string(const char* s) {
+//   int i = 0;
+//   while (s[i] != '\0') {
+//     i++;
+//   }
+
+//   len = i;
+//   buffer = new char[len];
+//   for (size_t j = 0; j < i; j++) {
+//     buffer[j] = s[j];
+//   }
+// };
 
 string::string(const string& other) {
   len = other.len;

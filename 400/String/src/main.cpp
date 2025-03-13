@@ -1,6 +1,6 @@
 #include <fstream>
 
-#include "string.h"
+#include "../include/string.h"
 using namespace String;
 
 void quitTester(int score) {

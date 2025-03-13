@@ -6,11 +6,13 @@ namespace String {
 class string {
  public:
   string();
+  // cppcheck-suppress noExplicitConstructor
   string(const char s[]);
 
   // big 3
   string(const string& other);
   string& operator=(const string& other);
+
   ~string();
 
   int length() const;
