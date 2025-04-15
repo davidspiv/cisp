@@ -1,11 +1,11 @@
 #include <iostream>
 #include <string>
 
-#include "Matrices.h"
+#include "Matrix.h"
 #include "io.h"
 int main() {
-  Matrices::Matrix matrixB(1, 5);
-  Matrices::Matrix matrixA(5, 1);
+  Matrix matrixB(1, 5);
+  Matrix matrixA(5, 1);
 
   // TEST
 
@@ -25,6 +25,6 @@ int main() {
   std::cout << matrixA << std::endl;
   std::cout << "b:" << std::endl;
   std::cout << matrixB << std::endl;
-  std::cout << "c = a * b:" << std::endl;
-  std::cout << matrixA * matrixB;
+  std::cout << "multiply:" << std::endl;
+  std::cout << matrixA.multiply(matrixB);
 }

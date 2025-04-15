@@ -2,14 +2,14 @@ CC=g++
 CFLAGS= -c -g -Wall -std=c++17 -fpermissive
 EXENAME= M04
 
-default: main.o Matrices.o
-	$(CC) main.o Matrices.o -o $(EXENAME)
+default: main.o Matrix.o
+	$(CC) main.o Matrix.o -o $(EXENAME)
 
-main.o: main.cpp Matrices.h io.h
+main.o: main.cpp Matrix.h io.h
 	$(CC) $(CFLAGS) main.cpp -o main.o
 
-Matrices.o: Matrices.cpp
-	$(CC) $(CFLAGS) Matrices.cpp -o Matrices.o
+Matrix.o: Matrix.cpp
+	$(CC) $(CFLAGS) Matrix.cpp -o Matrix.o
 
 clean:
 	rm *.o $(EXENAME)
