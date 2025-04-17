@@ -237,7 +237,8 @@ build/main.o: src/main.cpp /usr/include/stdc-predef.h \
  /usr/include/SFML/Graphics/Glsl.hpp /usr/include/SFML/Graphics/Glsl.inl \
  /usr/include/SFML/Graphics/Sprite.hpp \
  /usr/include/SFML/Graphics/Text.hpp \
- /usr/include/SFML/Graphics/VertexBuffer.hpp
+ /usr/include/SFML/Graphics/VertexBuffer.hpp /usr/include/c++/11/iostream \
+ /usr/include/c++/11/istream /usr/include/c++/11/bits/istream.tcc
 /usr/include/stdc-predef.h:
 /usr/include/SFML/Graphics.hpp:
 /usr/include/SFML/Window.hpp:
@@ -534,3 +535,6 @@ build/main.o: src/main.cpp /usr/include/stdc-predef.h \
 /usr/include/SFML/Graphics/Sprite.hpp:
 /usr/include/SFML/Graphics/Text.hpp:
 /usr/include/SFML/Graphics/VertexBuffer.hpp:
+/usr/include/c++/11/iostream:
+/usr/include/c++/11/istream:
+/usr/include/c++/11/bits/istream.tcc:
