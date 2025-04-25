@@ -1,34 +1,52 @@
-// abs complex example
-#include <iostream>     // std::cout
-#include <complex>      // std::complex, std::abs
-using namespace std;
+#include <SFML/Graphics.hpp>
+#include <iostream>
 
-void testConvergence(complex<double> c)
-{
-    cout << "c = " << c << endl;
-    cout << "Real component of c: " << c.real() << endl;
-    cout << "Imaginary component of c: " << c.imag() << endl;
-    complex<double> z  = c;
-    int i = 0;
-    while(abs(z) < 2.0 && i < 64)
-    {
-        z = z*z + c;
-        //cout << "z_" << i << "= " << z << endl;
-        //cout << "|z| = " << abs(c) << endl;
-        i++;
-    }
-    if(i == 64) cout << c << " converges!" << endl;
-    else cout << c << " escapes after " << i << " iterations" << endl;
+constexpr int SCREEN_WIDTH = 1920;
+constexpr int SCREEN_HEIGHT = 1080;
+constexpr int TARGET_FPS = 60;
+constexpr int ANTIALIAS_LEVEL = 8;
+constexpr char WINDOW_TITLE[] = "Template Demo";
+
+void setup_window(sf::RenderWindow &window, sf::Vector2i screen_size) {
+  sf::ContextSettings settings;
+  settings.antialiasingLevel = ANTIALIAS_LEVEL;
+
+  window.create(sf::VideoMode(screen_size.x, screen_size.y), WINDOW_TITLE,
+                sf::Style::Default, settings);
+
+  if (!window.isOpen()) {
+    throw std::runtime_error("Failed to create SFML window\n");
+    return;
+  }
+
+  std::cout << "Anti-Aliasing: "
+            << (window.getSettings().antialiasingLevel ? "ON" : "OFF") << "\n";
+
+  auto desktop = sf::VideoMode::getDesktopMode();
+  window.setPosition(
+      {static_cast<int>(desktop.width / 2 - screen_size.x / 2),
+       static_cast<int>(desktop.height / 2 - screen_size.y / 2)});
+
+  window.setFramerateLimit(TARGET_FPS);
 }
 
-int main ()
-{
-    double re = -0.77568377;
-    double im = 0.13646737;
-    complex<double> c (re, im);
-    testConvergence(c);
-    cout << endl;
-    c = {-0.77568377, 0.23646737};
-    testConvergence(c);
-    return 0;
+int main() {
+  const sf::Vector2i SCREEN_DIM(SCREEN_WIDTH, SCREEN_HEIGHT);
+  sf::RenderWindow window;
+  setup_window(window, SCREEN_DIM);
+
+  while (window.isOpen()) {
+    sf::Event event;
+    while (window.pollEvent(event)) {
+      if (event.type == sf::Event::Closed ||
+          sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
+        window.close();
+      }
+    }
+
+    // Drawing
+    window.clear(sf::Color::Black);
+    // window.draw(...);
+    window.display();
+  }
 }
