@@ -47,7 +47,7 @@ private:
 
 ComplexPlane::ComplexPlane(int pixelWidth, int pixelHeight)
     : m_pixel_size(sf::Vector2i(pixelWidth, pixelHeight)),
-      m_aspectRatio((double)pixelWidth / pixelHeight),
+      m_aspectRatio((double)pixelHeight / pixelWidth),
       m_plane_center(sf::Vector2f(0.f, 0.f)),
       m_plane_size(BASE_WIDTH, BASE_HEIGHT * m_aspectRatio), m_zoomCount(0),
       m_state(CALCULATING),
@@ -59,6 +59,7 @@ void ComplexPlane::draw(sf::RenderTarget &target,
                         sf::RenderStates states) const {
   target.draw(m_vArray);
 };
+
 
 void ComplexPlane::zoom() {
   const float scalar = std::pow(BASE_ZOOM, m_zoomCount);
@@ -101,12 +102,11 @@ void ComplexPlane::updateRender() {
   if (m_state == DISPLAYING)
     return;
 
-  for (size_t j = 0; j < SCREEN_WIDTH; j++) {
-    for (size_t i = 0; i < SCREEN_HEIGHT; i++) {
-      m_vArray[j + i * SCREEN_WIDTH].position = {(float)j, (float)i};
+  for (int j = 0; j < m_pixel_size.x; j++) {
+    for (int i = 0; i < m_pixel_size.y; i++) {
+      m_vArray[j + i * m_pixel_size.x].position = {(float)j, (float)i};
 
-      const sf::Vector2f complexCoord =
-          mapPixelToCoords(sf::Vector2i((int)j, (int)i));
+      const sf::Vector2f complexCoord = mapPixelToCoords(sf::Vector2i(j, i));
 
       const int iterations = countIterations(complexCoord);
 
@@ -116,10 +116,10 @@ void ComplexPlane::updateRender() {
 
       iterationsToRGB(iterations, r, g, b);
 
-      m_vArray[j + i * SCREEN_WIDTH].color = {r, g, b};
-      m_state = DISPLAYING;
+      m_vArray[j + i * m_pixel_size.x].color = {r, g, b};
     }
   }
+  m_state = DISPLAYING;
 };
 
 
@@ -127,7 +127,7 @@ int ComplexPlane::countIterations(sf::Vector2f coord) {
   std::complex<double> c = {coord.x, coord.y};
   std::complex<double> z = c;
   int i = 0;
-  while (abs(z) < 2.0 && i < 64) {
+  while (abs(z) < 2.0 && i < int(MAX_ITER)) {
     z = z * z + c;
     i++;
   }
@@ -148,12 +148,16 @@ void ComplexPlane::iterationsToRGB(size_t count, u_int8_t &r, u_int8_t &g,
 
 sf::Vector2f ComplexPlane::mapPixelToCoords(sf::Vector2i mousePixel) {
 
-  auto mapNumericRange = [](int n, int a, int b, float c, float d) {
-    return ((float)(n - a) / (b - a)) * (d - c) + c;
-  };
+  const float xMag = m_plane_size.x;
+  const float yMag = m_plane_size.y;
 
-  const float x = mapNumericRange(mousePixel.x, 0, SCREEN_WIDTH, -2, 2);
-  const float y = mapNumericRange(mousePixel.y, 0, SCREEN_HEIGHT, -2, 2);
+  const float xOffset = (m_plane_center.x - m_plane_size.x / 2.0);
+  const float yOffset = (m_plane_center.y - m_plane_size.y / 2.0);
+
+  const float x = ((float)(mousePixel.x) / (m_pixel_size.x)) * xMag + xOffset;
+  const float y =
+      (1.0f - ((float)(mousePixel.y) / SCREEN_HEIGHT)) * yMag + yOffset; // flip
+
 
   return sf::Vector2f(x, y);
 };

@@ -47,11 +47,11 @@ int main() {
         window.close();
       }
 
-      sf::Vector2i mousePos = sf::Mouse::getPosition();
+      sf::Vector2i mousePos = sf::Mouse::getPosition(window);
 
       if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)) {
         complexPlane.zoomOut();
-        complexPlane.setCenter(mousePos);
+        // complexPlane.setCenter(mousePos);
       }
 
       if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
