@@ -3,8 +3,6 @@
 
 #include "../include/ComplexPlane.h"
 
-constexpr int SCREEN_WIDTH = 1920 / 4.0;
-constexpr int SCREEN_HEIGHT = 1080 / 4.0;
 constexpr int TARGET_FPS = 60;
 constexpr int ANTIALIAS_LEVEL = 8;
 constexpr char WINDOW_TITLE[] = "Template Demo";
@@ -34,6 +32,7 @@ void setup_window(sf::RenderWindow &window, const int width, const int height) {
 int main() {
   sf::RenderWindow window;
   setup_window(window, SCREEN_WIDTH, SCREEN_HEIGHT);
+  sf::RenderStates states;
 
   ComplexPlane complexPlane(SCREEN_WIDTH, SCREEN_HEIGHT);
   sf::Font font;
@@ -71,7 +70,7 @@ int main() {
 
     // Draw
     window.clear();
-    window.draw(complexPlane.m_vArray);
+    complexPlane.draw(window, states);
     // window.draw(text);
     window.display();
   }

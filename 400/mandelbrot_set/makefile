@@ -37,4 +37,4 @@ clean:
 
 -include $(DEP_FILES)
 
-.PHONY: all run clean
+.PHONY: all run cleanreloa
