@@ -18,7 +18,7 @@ void ComplexPlane::draw(sf::RenderTarget &target,
 };
 
 
-void ComplexPlane::zoomln() {};
+void ComplexPlane::zoomIn() {};
 
 
 void ComplexPlane::zoomOut() {};

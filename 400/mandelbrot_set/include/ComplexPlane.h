@@ -10,8 +10,10 @@ const float BASE_ZOOM = 0.5;
 const enum State { CALCULATING, DISPLAYING };
 
 class ComplexPlane {
- private:
+public:
   sf::VertexArray m_vArray;
+
+private:
   State m_state;
   sf::Vector2f m_mouseLocation;
   sf::Vector2i m_pixel_size;
@@ -20,17 +22,17 @@ class ComplexPlane {
   int m_zoomCount;
   float m_aspectRatio;
 
- public:
+public:
   ComplexPlane(int pixelWidth, int pixelHeight);
 
-  void draw(sf::RenderTarget& target, sf::RenderStates states) const;
-  void zoomln();
+  void draw(sf::RenderTarget &target, sf::RenderStates states) const;
+  void zoomIn();
   void zoomOut();
   void setCenter(sf::Vector2i mousePixel);
   void setMouseLocation(sf::Vector2i mousePixel);
-  void loadText(sf::Text& text);
+  void loadText(sf::Text &text);
   void updateRender();
   int countIterations(sf::Vector2f coord);
-  void iterationsToRGB(size_t count, u_int8_t& r, u_int8_t& g, u_int8_t& b);
+  void iterationsToRGB(size_t count, u_int8_t &r, u_int8_t &g, u_int8_t &b);
   sf::Vector2f mapPixelToCoords(sf::Vector2i mousePixel);
 };
