@@ -70,29 +70,8 @@ void ComplexPlane::loadText(sf::Text &text) {
 
   text.setFont(font);
   text.setCharacterSize(24); // Pixels
-  text.setFillColor(sf::Color::Red);
+  text.setFillColor(sf::Color(255, 255, 255));
   text.setString(ss.str());
-}
-
-
-void ComplexPlane::calcPixels(const int rowStart, const int rowsToCalc) {
-  for (int j = rowStart; j < rowStart + rowsToCalc; j++) {
-    for (int i = 0; i < m_pixel_size.y; i++) {
-      m_vArray[j + i * m_pixel_size.x].position = {(float)j, (float)i};
-
-      const sf::Vector2f complexCoord = mapPixelToCoords(sf::Vector2i(j, i));
-
-      const int iterations = countIterations(complexCoord);
-
-      u_int8_t r;
-      u_int8_t g;
-      u_int8_t b;
-
-      iterationsToRGB(iterations, r, g, b);
-
-      m_vArray[j + i * m_pixel_size.x].color = {r, g, b};
-    }
-  }
 }
 
 
@@ -112,7 +91,7 @@ void ComplexPlane::updateRender(const int threadCount) {
         (chunkSize < m_pixel_size.x - i) ? chunkSize : m_pixel_size.x - i;
 
     threads.emplace_back(
-        [i, actualChunkSize, this]() { calcPixels(i, actualChunkSize); });
+        [i, actualChunkSize, this]() { calcChunk(i, actualChunkSize); });
   }
 
   // Join all threads
@@ -123,30 +102,6 @@ void ComplexPlane::updateRender(const int threadCount) {
   }
 
   m_state = DISPLAYING;
-}
-
-
-int ComplexPlane::countIterations(sf::Vector2f coord) {
-  std::complex<double> c = {coord.x, coord.y};
-  std::complex<double> z = c;
-  int i = 0;
-  while (abs(z) < 2.0 && i < int(MAX_ITER)) {
-    z = z * z + c;
-    i++;
-  }
-
-  return i;
-};
-
-
-// Map the given iteration count to an r,g,b color
-void ComplexPlane::iterationsToRGB(size_t count, u_int8_t &r, u_int8_t &g,
-                                   u_int8_t &b) {
-  if (count == MAX_ITER) {
-    r = g = b = 0;
-    return;
-  }
-  r = g = b = static_cast<u_int8_t>(255.0 * count / MAX_ITER);
 }
 
 
@@ -164,3 +119,107 @@ sf::Vector2f ComplexPlane::mapPixelToCoords(sf::Vector2i mousePixel) {
 
   return sf::Vector2f(x, y);
 };
+
+
+int ComplexPlane::countIterations(sf::Vector2f coord) {
+  std::complex<double> c = {coord.x, coord.y};
+  std::complex<double> z = c;
+  int i = 0;
+  while (abs(z) < 2.0 && i < int(MAX_ITER)) {
+    z = z * z + c;
+    i++;
+  }
+
+  return i;
+};
+
+struct RGB {
+  float r, g, b;
+};
+
+RGB hsvToRgb(float h, float s, float v) {
+  float c = v * s;
+  float x = c * (1 - std::fabs(std::fmod(h / 60.0f, 2) - 1));
+  float m = v - c;
+
+  float r, g, b;
+
+  if (h < 60) {
+    r = c;
+    g = x;
+    b = 0;
+  } else if (h < 120) {
+    r = x;
+    g = c;
+    b = 0;
+  } else if (h < 180) {
+    r = 0;
+    g = c;
+    b = x;
+  } else if (h < 240) {
+    r = 0;
+    g = x;
+    b = c;
+  } else if (h < 300) {
+    r = x;
+    g = 0;
+    b = c;
+  } else {
+    r = c;
+    g = 0;
+    b = x;
+  }
+
+  return {r + m, g + m, b + m};
+}
+
+std::vector<RGB> generateRainbowColors(int sampleCount) {
+  std::vector<RGB> colors;
+  colors.reserve(sampleCount);
+
+  for (int i = 0; i < sampleCount; ++i) {
+    float hue = (360.0f * i) / sampleCount; // hue from 0 to just under 360
+    RGB color = hsvToRgb(hue, 1.0f, 1.0f);  // full saturation and brightness
+    colors.push_back(color);
+  }
+
+  return colors;
+}
+
+
+// Map the given iteration count to an r,g,b color
+void ComplexPlane::iterationsToRGB(size_t count, u_int8_t &r, u_int8_t &g,
+                                   u_int8_t &b) {
+  const static std::vector<RGB> colors = generateRainbowColors(MAX_ITER);
+
+  if (count == MAX_ITER) {
+    r = g = b = 0;
+    return;
+  }
+
+  RGB color = colors[count];
+  r = color.r * 255.0;
+  g = color.g * 255.0;
+  b = color.b * 255.0;
+}
+
+
+void ComplexPlane::calcChunk(const int rowStart, const int rowsToCalc) {
+  for (int j = rowStart; j < rowStart + rowsToCalc; j++) {
+    for (int i = 0; i < m_pixel_size.y; i++) {
+      m_vArray[j + i * m_pixel_size.x].position = {(float)j, (float)i};
+
+      const sf::Vector2f complexCoord = mapPixelToCoords(sf::Vector2i(j, i));
+
+      const int iterations = countIterations(complexCoord);
+
+      u_int8_t r;
+      u_int8_t g;
+      u_int8_t b;
+
+      iterationsToRGB(iterations, r, g, b);
+
+      m_vArray[j + i * m_pixel_size.x].color = {r, g, b};
+    }
+  }
+}

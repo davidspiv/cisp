@@ -37,9 +37,9 @@ public:
   void updateRender(const int threadCount);
 
 private:
+  void zoom();
   sf::Vector2f mapPixelToCoords(sf::Vector2i mousePixel);
   int countIterations(sf::Vector2f coord);
   void iterationsToRGB(size_t count, u_int8_t &r, u_int8_t &g, u_int8_t &b);
-  void zoom();
-  void calcPixels(const int rowStart, const int rowsToCalc);
+  void calcChunk(const int rowStart, const int rowsToCalc);
 };

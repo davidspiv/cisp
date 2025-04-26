@@ -19,39 +19,15 @@ int main() {
   sf::Text text;
 
   while (window.isOpen()) {
-    // Input
+    // INPUT
+    // separate from event loop to ensure escape key kills process
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
+      window.close();
+    }
+
     sf::Event event;
-
-    // while (window.pollEvent(event)) {
-    //   if (event.type == sf::Event::Closed ||
-    //       sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
-    //     window.close();
-    //   }
-
-    //   sf::Vector2i mousePos = sf::Mouse::getPosition(window);
-
-    //   if (event.type == sf::Event::MouseMoved) {
-    //     complexPlane.setMouseLocation(mousePos);
-    //   }
-
-    //   if (complexPlane.m_state != CALCULATING &&
-    //       sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)) {
-    //     complexPlane.setCenter(mousePos);
-    //     complexPlane.zoomOut();
-    //   }
-
-    //   if (complexPlane.m_state != CALCULATING &&
-    //       sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
-    //     complexPlane.setCenter(mousePos);
-    //     complexPlane.zoomIn();
-    //   }
-    // }
-
-
     while (window.pollEvent(event)) {
-      if (event.type == sf::Event::Closed ||
-          (event.type == sf::Event::KeyPressed &&
-           event.key.code == sf::Keyboard::Escape)) {
+      if (event.type == sf::Event::Closed) {
         window.close();
       }
 
@@ -59,27 +35,27 @@ int main() {
         complexPlane.setMouseLocation(sf::Mouse::getPosition(window));
       }
 
-      if (complexPlane.m_state != CALCULATING) {
-        if (event.type == sf::Event::MouseButtonPressed) {
-          sf::Vector2i mousePos = sf::Mouse::getPosition(window);
+      if (complexPlane.m_state != CALCULATING &&
+          event.type == sf::Event::MouseButtonPressed) {
 
-          if (event.mouseButton.button == sf::Mouse::Left) {
-            complexPlane.setCenter(mousePos);
-            complexPlane.zoomIn();
+        sf::Vector2i mousePos = sf::Mouse::getPosition(window);
 
-          } else if (event.mouseButton.button == sf::Mouse::Right) {
-            complexPlane.setCenter(mousePos);
-            complexPlane.zoomOut();
-          }
+        if (event.mouseButton.button == sf::Mouse::Left) {
+          complexPlane.setCenter(mousePos);
+          complexPlane.zoomIn();
+
+        } else if (event.mouseButton.button == sf::Mouse::Right) {
+          complexPlane.setCenter(mousePos);
+          complexPlane.zoomOut();
         }
       }
     }
 
-    // Update
+    // UPDATE
     complexPlane.updateRender(threadCount);
     complexPlane.loadText(text);
 
-    // Draw
+    // DRAW
     window.clear();
     complexPlane.draw(window, states);
     window.draw(text);
