@@ -5,7 +5,6 @@
 #include <array>
 #include <iostream>
 #include <string>
-#include <unordered_map>
 
 namespace Color_Space {
 
@@ -59,15 +58,27 @@ public:
   Xyz to_xyz() const;
 
   /**
-   * @brief Approximates color difference between the two colors, using the
-   * CIEDE2000 formula.
-   * @param other Lab color to compute with.
-   * @return perceptual distance as defined by the CIE (ΔE*)
+   * @brief Prints Lab components to the console.
    */
-  [[nodiscard]] float diff_cie_2000(const Lab &other) const;
+  void print() const override;
+};
+
+
+class Lch_Ab : public Color {
+public:
+  /**
+   * @brief Constructs an Lch(ab) color (cylindrical Lab).
+   * @param l Lightness
+   * @param c Chroma
+   * @param h Hue angle [degrees]
+   * @param illuminant Cie illuminant (default D65)
+   */
+  Lch_Ab(float l, float c, float h);
+
+  [[nodiscard]] Lab to_lab() const;
 
   /**
-   * @brief Prints Lab components to the console.
+   * @brief Prints Lch(ab) components to the console.
    */
   void print() const override;
 };
@@ -127,6 +138,35 @@ public:
    */
   void print() const;
 };
+
+
+Color::Color(float x, float y, float z) : m_values({x, y, z}) {}
+
+
+std::array<float, 3> Color::get_values() const { return m_values; }
+
+
+void Color::print() const {
+  std::cout << "[GEN]" << "\nC1: " << m_values[0] << "\nC2: " << m_values[1]
+            << "\nC3: " << m_values[2] << "\n\n";
+}
+
+
+Matrix Color::to_column() const {
+  return Matrix({{m_values[0]}, {m_values[1]}, {m_values[2]}});
+};
+
+
+bool Color::operator==(const Color &other) const {
+  auto [x, y, z] = m_values;
+  float error = 1;
+  auto [other_x, other_y, other_z] = other.get_values();
+  return (std::abs(x - other_x) < error) && (std::abs(y - other_y) < error) &&
+         (std::abs(z - other_z) < error);
+}
+
+
+bool Color::operator!=(const Color &other) const { return !(*this == other); }
 
 
 } // namespace Color_Space

@@ -1,14 +1,12 @@
-#include "../include/Color.h"
-#include "../include/util.h"
-
 #include <cmath>
 #include <iostream>
 
+#include "Color.h"
+#include "util.h"
+
 namespace Color_Space {
 
-
 Lab::Lab(float l, float a, float b) : Color(l, a, b) {}
-
 
 Xyz Lab::to_xyz() const {
   const float fX = (m_values[0] + 16.0f) / 116.0f;
@@ -33,11 +31,9 @@ Xyz Lab::to_xyz() const {
   return Xyz(x, y, z);
 }
 
-
 void Lab::print() const {
   std::cout << "[Lab]" << "\nL: " << m_values[0] << "\na: " << m_values[1]
             << "\nb: " << m_values[2] << "\n\n";
 }
 
-
-} // namespace Color_Space
+}  // namespace Color_Space

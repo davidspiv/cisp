@@ -3,11 +3,18 @@
 #include "Color.h"
 #include "Matrix.h"
 
+#include <cmath>
+#define _USE_MATH_DEFINES // for VS
+
 using namespace Color_Space;
 
 static constexpr float epsilon = 216.0f / 24389.0f;
 static constexpr float kappa = 24389.0f / 27.0f;
 const Xyz REF_WHITE_D65 = Xyz(0.95047f, 1.00000f, 1.08883f);
+
+
+float to_radians(const float degrees) { return degrees * (M_PI / 180.0); }
+
 
 Matrix create_to_xyz_transformation_matrix(Xyz ref_white) {
   auto [r_x, r_y, r_z] = Xyz(0.6400f, 0.3300f, 0.212656f).get_values();
