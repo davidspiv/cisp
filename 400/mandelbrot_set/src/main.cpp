@@ -22,28 +22,56 @@ int main() {
     // Input
     sf::Event event;
 
+    // while (window.pollEvent(event)) {
+    //   if (event.type == sf::Event::Closed ||
+    //       sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
+    //     window.close();
+    //   }
+
+    //   sf::Vector2i mousePos = sf::Mouse::getPosition(window);
+
+    //   if (event.type == sf::Event::MouseMoved) {
+    //     complexPlane.setMouseLocation(mousePos);
+    //   }
+
+    //   if (complexPlane.m_state != CALCULATING &&
+    //       sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)) {
+    //     complexPlane.setCenter(mousePos);
+    //     complexPlane.zoomOut();
+    //   }
+
+    //   if (complexPlane.m_state != CALCULATING &&
+    //       sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+    //     complexPlane.setCenter(mousePos);
+    //     complexPlane.zoomIn();
+    //   }
+    // }
+
+
     while (window.pollEvent(event)) {
       if (event.type == sf::Event::Closed ||
-          sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
+          (event.type == sf::Event::KeyPressed &&
+           event.key.code == sf::Keyboard::Escape)) {
         window.close();
       }
 
-      sf::Vector2i mousePos = sf::Mouse::getPosition(window);
-
       if (event.type == sf::Event::MouseMoved) {
-        complexPlane.setMouseLocation(mousePos);
+        complexPlane.setMouseLocation(sf::Mouse::getPosition(window));
       }
 
-      if (complexPlane.m_state != CALCULATING &&
-          sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)) {
-        complexPlane.setCenter(mousePos);
-        complexPlane.zoomOut();
-      }
+      if (complexPlane.m_state != CALCULATING) {
+        if (event.type == sf::Event::MouseButtonPressed) {
+          sf::Vector2i mousePos = sf::Mouse::getPosition(window);
 
-      if (complexPlane.m_state != CALCULATING &&
-          sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
-        complexPlane.setCenter(mousePos);
-        complexPlane.zoomIn();
+          if (event.mouseButton.button == sf::Mouse::Left) {
+            complexPlane.setCenter(mousePos);
+            complexPlane.zoomIn();
+
+          } else if (event.mouseButton.button == sf::Mouse::Right) {
+            complexPlane.setCenter(mousePos);
+            complexPlane.zoomOut();
+          }
+        }
       }
     }
 
