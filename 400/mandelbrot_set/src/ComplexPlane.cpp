@@ -37,9 +37,23 @@ void ComplexPlane::updateRender() {
   const size_t screenWidth = m_plane_size.x;
   const size_t screenHeight = m_plane_size.y;
 
-  for (size_t j = 0; j < screenHeight; j++) {
-    for (size_t i = 0; i < screenWidth; i++) {
+  for (size_t j = 0; j < screenWidth; j++) {
+    for (size_t i = 0; i < screenHeight; i++) {
       m_vArray[j + i * screenWidth].position = {(float)j, (float)i};
+
+      const sf::Vector2f complexCoord =
+          mapPixelToCoords(sf::Vector2i((int)j, (int)i));
+
+      const int iterations = countIterations(complexCoord);
+
+      u_int8_t r;
+      u_int8_t g;
+      u_int8_t b;
+
+      iterationsToRGB(iterations, r, g, b);
+
+      m_vArray[j + i * screenWidth].color = {r, g, b};
+      m_state = DISPLAYING;
     }
   }
 };

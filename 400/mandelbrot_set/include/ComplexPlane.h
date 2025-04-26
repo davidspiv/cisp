@@ -22,6 +22,7 @@ class ComplexPlane {
 
  public:
   ComplexPlane(int pixelWidth, int pixelHeight);
+
   void draw(sf::RenderTarget& target, sf::RenderStates states) const;
   void zoomln();
   void zoomOut();
