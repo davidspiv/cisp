@@ -47,21 +47,21 @@ int main() {
         window.close();
       }
 
-      //   sf::Vector2i mousePos = sf::Mouse::getPosition();
+      sf::Vector2i mousePos = sf::Mouse::getPosition();
 
-      //   if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)) {
-      //     complexPlane.zoomOut();
-      //     complexPlane.setCenter(mousePos);
-      //   }
+      if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)) {
+        complexPlane.zoomOut();
+        complexPlane.setCenter(mousePos);
+      }
 
-      //   if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
-      //     complexPlane.zoomIn();
-      //     complexPlane.setCenter(mousePos);
-      //   }
+      if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+        complexPlane.zoomIn();
+        complexPlane.setCenter(mousePos);
+      }
 
-      //   if (event.type == sf::Event::MouseMoved) {
-      //     complexPlane.setMouseLocation(mousePos);
-      //   }
+      if (event.type == sf::Event::MouseMoved) {
+        complexPlane.setMouseLocation(mousePos);
+      }
     }
 
     // Update

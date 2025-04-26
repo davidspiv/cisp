@@ -3,29 +3,30 @@
 #include <SFML/Graphics.hpp>
 
 #include <complex>
+#include <sstream>
 
-constexpr int SCREEN_WIDTH = 1920 / 4.0;
-constexpr int SCREEN_HEIGHT = 1080 / 4.0;
+constexpr int SCREEN_WIDTH = 1920 / 2.0;
+constexpr int SCREEN_HEIGHT = 1080 / 2.0;
 
 const unsigned int MAX_ITER = 64;
 const float BASE_WIDTH = 4.0;
 const float BASE_HEIGHT = 4.0;
 const float BASE_ZOOM = 0.5;
 
-enum Loop_State { CALCULATING, DISPLAYING };
+enum State { CALCULATING, DISPLAYING };
 
 class ComplexPlane : public sf::Drawable {
-
-public:
-  sf::Vector2i m_pixel_size;
-  float m_aspectRatio;
+private:
+  const sf::Vector2i m_pixel_size;
+  const float m_aspectRatio;
   sf::Vector2f m_plane_center;
   sf::Vector2f m_plane_size;
   int m_zoomCount;
-  Loop_State m_state;
+  State m_state;
   sf::VertexArray m_vArray;
   sf::Vector2f m_mouseLocation;
 
+public:
   ComplexPlane(int pixelWidth, int pixelHeight);
 
   void draw(sf::RenderTarget &target, sf::RenderStates states) const;
@@ -40,12 +41,13 @@ private:
   sf::Vector2f mapPixelToCoords(sf::Vector2i mousePixel);
   int countIterations(sf::Vector2f coord);
   void iterationsToRGB(size_t count, u_int8_t &r, u_int8_t &g, u_int8_t &b);
+  void zoom();
 };
 
 
 ComplexPlane::ComplexPlane(int pixelWidth, int pixelHeight)
     : m_pixel_size(sf::Vector2i(pixelWidth, pixelHeight)),
-      m_aspectRatio((double)pixelWidth / (double)pixelHeight),
+      m_aspectRatio((double)pixelWidth / pixelHeight),
       m_plane_center(sf::Vector2f(0.f, 0.f)),
       m_plane_size(BASE_WIDTH, BASE_HEIGHT * m_aspectRatio), m_zoomCount(0),
       m_state(CALCULATING),
@@ -58,17 +60,38 @@ void ComplexPlane::draw(sf::RenderTarget &target,
   target.draw(m_vArray);
 };
 
+void ComplexPlane::zoom() {
+  const float scalar = std::pow(BASE_ZOOM, m_zoomCount);
 
-void ComplexPlane::zoomIn() {};
+  const float x = BASE_WIDTH * scalar;
+  const float y = BASE_HEIGHT * m_aspectRatio * scalar;
+
+  m_plane_size = sf::Vector2f(x, y);
+  m_state = CALCULATING;
+}
 
 
-void ComplexPlane::zoomOut() {};
+void ComplexPlane::zoomIn() {
+  ++m_zoomCount;
+  zoom();
+};
 
 
-void ComplexPlane::setCenter(sf::Vector2i mousePixel) {};
+void ComplexPlane::zoomOut() {
+  --m_zoomCount;
+  zoom();
+};
 
 
-void ComplexPlane::setMouseLocation(sf::Vector2i mousePixel) {};
+void ComplexPlane::setCenter(sf::Vector2i mousePixel) {
+  m_plane_center = mapPixelToCoords(mousePixel);
+  m_state = CALCULATING;
+};
+
+
+void ComplexPlane::setMouseLocation(sf::Vector2i mousePixel) {
+  m_mouseLocation = mapPixelToCoords(mousePixel);
+};
 
 
 void ComplexPlane::loadText(sf::Text &text) {};
@@ -106,8 +129,6 @@ int ComplexPlane::countIterations(sf::Vector2f coord) {
   int i = 0;
   while (abs(z) < 2.0 && i < 64) {
     z = z * z + c;
-    // cout << "z_" << i << "= " << z << endl;
-    // cout << "|z| = " << abs(c) << endl;
     i++;
   }
 
@@ -118,8 +139,8 @@ int ComplexPlane::countIterations(sf::Vector2f coord) {
 // Map the given iteration count to an r,g,b color
 void ComplexPlane::iterationsToRGB(size_t count, u_int8_t &r, u_int8_t &g,
                                    u_int8_t &b) {
-  if (count == 65) {
-    r = g = b = 255;
+  if (count == MAX_ITER) {
+    r = g = b = 0;
   }
   r = g = b = static_cast<u_int8_t>(255.0 * count / MAX_ITER);
 }
