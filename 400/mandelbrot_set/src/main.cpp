@@ -48,31 +48,31 @@ int main() {
         window.close();
       }
 
-      sf::Vector2i mousePos = sf::Mouse::getPosition();
+      //   sf::Vector2i mousePos = sf::Mouse::getPosition();
 
-      if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)) {
-        complexPlane.zoomOut();
-        complexPlane.setCenter(mousePos);
-      }
+      //   if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)) {
+      //     complexPlane.zoomOut();
+      //     complexPlane.setCenter(mousePos);
+      //   }
 
-      if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
-        complexPlane.zoomIn();
-        complexPlane.setCenter(mousePos);
-      }
+      //   if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+      //     complexPlane.zoomIn();
+      //     complexPlane.setCenter(mousePos);
+      //   }
 
-      if (event.type == sf::Event::MouseMoved) {
-        complexPlane.setMouseLocation(mousePos);
-      }
+      //   if (event.type == sf::Event::MouseMoved) {
+      //     complexPlane.setMouseLocation(mousePos);
+      //   }
     }
 
     // Update
     complexPlane.updateRender();
-    complexPlane.loadText(text);
+    // complexPlane.loadText(text);
 
     // Draw
     window.clear();
     window.draw(complexPlane.m_vArray);
-    window.draw(text);
+    // window.draw(text);
     window.display();
   }
 }
