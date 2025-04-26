@@ -1,5 +1,10 @@
 #include "../include/ComplexPlane.h"
+#include "../include/timer.h"
 #include "../include/window.h"
+
+#include <cmath>
+#include <iostream>
+#include <thread>
 
 ComplexPlane::ComplexPlane(int pixelWidth, int pixelHeight)
     : m_pixel_size(sf::Vector2i(pixelWidth, pixelHeight)),
@@ -70,11 +75,8 @@ void ComplexPlane::loadText(sf::Text &text) {
 }
 
 
-void ComplexPlane::updateRender() {
-  if (m_state == DISPLAYING)
-    return;
-
-  for (int j = 0; j < m_pixel_size.x; j++) {
+void ComplexPlane::calcPixels(const int rowStart, const int rowsToCalc) {
+  for (int j = rowStart; j < rowStart + rowsToCalc; j++) {
     for (int i = 0; i < m_pixel_size.y; i++) {
       m_vArray[j + i * m_pixel_size.x].position = {(float)j, (float)i};
 
@@ -91,8 +93,37 @@ void ComplexPlane::updateRender() {
       m_vArray[j + i * m_pixel_size.x].color = {r, g, b};
     }
   }
+}
+
+
+void ComplexPlane::updateRender(const int threadCount) {
+  if (m_state == DISPLAYING)
+    return;
+
+  //   Timer timer;
+
+  const int chunkSize = std::ceil((float)m_pixel_size.x / threadCount);
+
+  std::vector<std::thread> threads;
+  threads.resize(threadCount);
+
+  for (int i = 0; i < m_pixel_size.x; i += chunkSize) {
+    int actualChunkSize =
+        (chunkSize < m_pixel_size.x - i) ? chunkSize : m_pixel_size.x - i;
+
+    threads.emplace_back(
+        [i, actualChunkSize, this]() { calcPixels(i, actualChunkSize); });
+  }
+
+  // Join all threads
+  for (auto &t : threads) {
+    if (t.joinable()) {
+      t.join();
+    }
+  }
+
   m_state = DISPLAYING;
-};
+}
 
 
 int ComplexPlane::countIterations(sf::Vector2f coord) {
@@ -113,6 +144,7 @@ void ComplexPlane::iterationsToRGB(size_t count, u_int8_t &r, u_int8_t &g,
                                    u_int8_t &b) {
   if (count == MAX_ITER) {
     r = g = b = 0;
+    return;
   }
   r = g = b = static_cast<u_int8_t>(255.0 * count / MAX_ITER);
 }

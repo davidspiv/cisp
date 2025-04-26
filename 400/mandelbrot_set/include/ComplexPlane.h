@@ -34,11 +34,12 @@ public:
   void setCenter(sf::Vector2i mousePixel);
   void setMouseLocation(sf::Vector2i mousePixel);
   void loadText(sf::Text &text);
-  void updateRender();
+  void updateRender(const int threadCount);
 
 private:
   sf::Vector2f mapPixelToCoords(sf::Vector2i mousePixel);
   int countIterations(sf::Vector2f coord);
   void iterationsToRGB(size_t count, u_int8_t &r, u_int8_t &g, u_int8_t &b);
   void zoom();
+  void calcPixels(const int rowStart, const int rowsToCalc);
 };

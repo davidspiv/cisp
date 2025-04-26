@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
+
 constexpr char WINDOW_TITLE[] = "Mandelbrot Set";
 constexpr int SCREEN_WIDTH = 1920 / 2.0;
 constexpr int SCREEN_HEIGHT = 1080 / 2.0;
