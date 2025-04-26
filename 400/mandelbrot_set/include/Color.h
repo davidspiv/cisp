@@ -1,14 +1,20 @@
 #pragma once
 
 #include "Matrix.h"
-#include "util.h"
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <iostream>
 #include <string>
 
+#define _USE_MATH_DEFINES // for VS
+
 namespace Color_Space {
+
+static constexpr float epsilon = 216.0f / 24389.0f;
+static constexpr float kappa = 24389.0f / 27.0f;
+const std::array<float, 3> REF_WHITE_D65 = {0.95047f, 1.00000f, 1.08883f};
 
 // forward declarations
 class Lab;
@@ -205,6 +211,9 @@ void Lab::print() const {
 
 // LCH(ab)
 
+float to_radians(const float degrees) { return degrees * (M_PI / 180.0); }
+
+
 Lch_Ab::Lch_Ab(float l, float c, float h) : Color(l, c, h) {}
 
 
@@ -226,6 +235,15 @@ void Lch_Ab::print() const {
 
 
 // RGB
+
+float remove_gamma(float c) {
+  if (c <= 0) {
+    return c;
+  }
+
+  return (c <= 0.04045f) ? (c / 12.92f) : std::pow((c + 0.055f) / 1.055f, 2.4f);
+}
+
 
 Rgb::Rgb(float r, float g, float b) : Color(r, g, b) {
   auto validate = [](float c) {
@@ -265,6 +283,16 @@ void Rgb::print() const {
 
 
 // XYZ
+
+float apply_gamma(const float c) {
+  if (c <= 0) {
+    return c;
+  }
+
+  return (c <= 0.0031308f) ? (c * 12.92f)
+                           : 1.055f * std::pow(c, 1.0f / 2.4f) - 0.055f;
+}
+
 
 Xyz::Xyz(float x, float y, float z) : Color(x, y, z) {}
 
