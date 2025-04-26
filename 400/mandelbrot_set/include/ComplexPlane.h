@@ -22,11 +22,12 @@ private:
   sf::Vector2f m_plane_center;
   sf::Vector2f m_plane_size;
   int m_zoomCount;
-  State m_state;
   sf::VertexArray m_vArray;
   sf::Vector2f m_mouseLocation;
 
 public:
+  State m_state;
+
   ComplexPlane(int pixelWidth, int pixelHeight);
 
   void draw(sf::RenderTarget &target, sf::RenderStates states) const;
@@ -50,9 +51,9 @@ ComplexPlane::ComplexPlane(int pixelWidth, int pixelHeight)
       m_aspectRatio((double)pixelHeight / pixelWidth),
       m_plane_center(sf::Vector2f(0.f, 0.f)),
       m_plane_size(BASE_WIDTH, BASE_HEIGHT * m_aspectRatio), m_zoomCount(0),
-      m_state(CALCULATING),
-      m_vArray(sf::VertexArray(sf::PrimitiveType::Points,
-                               pixelWidth * pixelHeight)) {};
+      m_vArray(
+          sf::VertexArray(sf::PrimitiveType::Points, pixelWidth * pixelHeight)),
+      m_state(CALCULATING) {};
 
 
 void ComplexPlane::draw(sf::RenderTarget &target,
@@ -102,12 +103,14 @@ void ComplexPlane::loadText(sf::Text &text) {
   }
 
   std::stringstream ss;
-  ss << "Mandelbrot Set\nCenter: " << m_plane_center.x
-     << "\nCursor: " << m_mouseLocation.x
-     << "\nLeft-click to Zoom in\nRight-click to Zoom out";
+  ss << "Mandelbrot Set\nCenter: (" << m_plane_center.x << ','
+     << m_plane_center.y << ")\n"
+     << "Cursor: (" << m_mouseLocation.x << ',' << m_mouseLocation.y << ")\n"
+     << "Left-click to Zoom in\nRight-click to Zoom out";
 
   text.setFont(font);
-  text.setCharacterSize(12); // Pixels
+  text.setCharacterSize(24); // Pixels
+  text.setColor(sf::Color::Red);
   text.setString(ss.str());
 }
 
@@ -169,8 +172,8 @@ sf::Vector2f ComplexPlane::mapPixelToCoords(sf::Vector2i mousePixel) {
   const float yOffset = (m_plane_center.y - m_plane_size.y / 2.0);
 
   const float x = ((float)(mousePixel.x) / (m_pixel_size.x)) * xMag + xOffset;
-  const float y = ((float)(mousePixel.y) / SCREEN_HEIGHT) * yMag + yOffset;
-  // y is technically flipped, but mandelbrot set is symmetrical on the y-axis
+  const float y =
+      (1.0f - ((float)(mousePixel.y) / SCREEN_HEIGHT)) * yMag + yOffset; // flip
 
   return sf::Vector2f(x, y);
 };

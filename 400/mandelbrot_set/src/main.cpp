@@ -49,12 +49,14 @@ int main() {
 
       sf::Vector2i mousePos = sf::Mouse::getPosition(window);
 
-      if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)) {
+      if (complexPlane.m_state != CALCULATING &&
+          sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)) {
         complexPlane.zoomOut();
         complexPlane.setCenter(mousePos);
       }
 
-      if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+      if (complexPlane.m_state != CALCULATING &&
+          sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
         complexPlane.zoomIn();
         complexPlane.setCenter(mousePos);
       }
