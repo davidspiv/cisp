@@ -173,6 +173,7 @@ RGB hsvToRgb(float h, float s, float v) {
   return {r + m, g + m, b + m};
 }
 
+
 std::vector<RGB> generateRainbowColors(int sampleCount) {
   std::vector<RGB> colors;
   colors.reserve(sampleCount);
@@ -187,6 +188,16 @@ std::vector<RGB> generateRainbowColors(int sampleCount) {
 }
 
 
+float apply_gamma(const float c) {
+  if (c <= 0) {
+    return c;
+  }
+
+  return (c <= 0.0031308f) ? (c * 12.92f)
+                           : 1.055f * std::pow(c, 1.0f / 2.4f) - 0.055f;
+}
+
+
 // Map the given iteration count to an r,g,b color
 void ComplexPlane::iterationsToRGB(size_t count, u_int8_t &r, u_int8_t &g,
                                    u_int8_t &b) {
@@ -198,9 +209,14 @@ void ComplexPlane::iterationsToRGB(size_t count, u_int8_t &r, u_int8_t &g,
   }
 
   RGB color = colors[count];
-  r = color.r * 255.0;
-  g = color.g * 255.0;
-  b = color.b * 255.0;
+
+  //   const float r_corr = apply_gamma(color.r);
+  //   const float g_corr = apply_gamma(color.g);
+  //   const float b_corr = apply_gamma(color.b);
+
+  r = std::clamp(color.r, 0.0f, 1.0f) * 255.0f;
+  g = std::clamp(color.g, 0.0f, 1.0f) * 255.0f;
+  b = std::clamp(color.b, 0.0f, 1.0f) * 255.0f;
 }
 
 
