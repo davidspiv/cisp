@@ -95,7 +95,21 @@ void ComplexPlane::setMouseLocation(sf::Vector2i mousePixel) {
 };
 
 
-void ComplexPlane::loadText(sf::Text &text) {};
+void ComplexPlane::loadText(sf::Text &text) {
+  static sf::Font font;
+  if (!font.loadFromFile("Cascadia.ttf")) {
+    throw std::runtime_error("unable to open font file");
+  }
+
+  std::stringstream ss;
+  ss << "Mandelbrot Set\nCenter: " << m_plane_center.x
+     << "\nCursor: " << m_mouseLocation.x
+     << "\nLeft-click to Zoom in\nRight-click to Zoom out";
+
+  text.setFont(font);
+  text.setCharacterSize(12); // Pixels
+  text.setString(ss.str());
+}
 
 
 void ComplexPlane::updateRender() {
@@ -155,9 +169,8 @@ sf::Vector2f ComplexPlane::mapPixelToCoords(sf::Vector2i mousePixel) {
   const float yOffset = (m_plane_center.y - m_plane_size.y / 2.0);
 
   const float x = ((float)(mousePixel.x) / (m_pixel_size.x)) * xMag + xOffset;
-  const float y =
-      (1.0f - ((float)(mousePixel.y) / SCREEN_HEIGHT)) * yMag + yOffset; // flip
-
+  const float y = ((float)(mousePixel.y) / SCREEN_HEIGHT) * yMag + yOffset;
+  // y is technically flipped, but mandelbrot set is symmetrical on the y-axis
 
   return sf::Vector2f(x, y);
 };

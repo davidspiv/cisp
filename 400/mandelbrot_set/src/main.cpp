@@ -51,7 +51,7 @@ int main() {
 
       if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)) {
         complexPlane.zoomOut();
-        // complexPlane.setCenter(mousePos);
+        complexPlane.setCenter(mousePos);
       }
 
       if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
@@ -66,12 +66,12 @@ int main() {
 
     // Update
     complexPlane.updateRender();
-    // complexPlane.loadText(text);
+    complexPlane.loadText(text);
 
     // Draw
     window.clear();
     complexPlane.draw(window, states);
-    // window.draw(text);
+    window.draw(text);
     window.display();
   }
 }
