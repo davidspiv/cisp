@@ -1,4 +1,5 @@
 #include "../include/ComplexPlane.h"
+#include "../include/Color.h"
 #include "../include/timer.h"
 #include "../include/window.h"
 
@@ -137,66 +138,19 @@ struct RGB {
   float r, g, b;
 };
 
-RGB hsvToRgb(float h, float s, float v) {
-  float c = v * s;
-  float x = c * (1 - std::fabs(std::fmod(h / 60.0f, 2) - 1));
-  float m = v - c;
 
-  float r, g, b;
-
-  if (h < 60) {
-    r = c;
-    g = x;
-    b = 0;
-  } else if (h < 120) {
-    r = x;
-    g = c;
-    b = 0;
-  } else if (h < 180) {
-    r = 0;
-    g = c;
-    b = x;
-  } else if (h < 240) {
-    r = 0;
-    g = x;
-    b = c;
-  } else if (h < 300) {
-    r = x;
-    g = 0;
-    b = c;
-  } else {
-    r = c;
-    g = 0;
-    b = x;
-  }
-
-  return {r + m, g + m, b + m};
-}
-
-
-float apply_gamma(const float c) {
-  if (c <= 0) {
-    return c;
-  }
-
-  return (c <= 0.0031308f) ? (c * 12.92f)
-                           : 1.055f * std::pow(c, 1.0f / 2.4f) - 0.055f;
-}
-
-
-std::vector<RGB> generateRainbowColors(int sampleCount) {
-  std::vector<RGB> colors;
+std::vector<Color_Space::Rgb> generateRainbowColors(int sampleCount) {
+  std::vector<Color_Space::Rgb> colors;
   colors.reserve(sampleCount);
 
   for (int i = 0; i < sampleCount; ++i) {
     float hue = (360.0f * i) / sampleCount; // hue from 0 to just under 360
-    RGB color = hsvToRgb(hue, 1.0f, 1.0f);  // full saturation and brightness
 
-    color.r = std::clamp(apply_gamma(color.r), 0.0f, 1.0f) * 255.0f;
-    color.g = std::clamp(apply_gamma(color.g), 0.0f, 1.0f) * 255.0f;
-    color.b = std::clamp(apply_gamma(color.b), 0.0f, 1.0f) * 255.0f;
+    Color_Space::Lch_Ab Lch_ab(.5f, .5f, hue);
 
-    colors.push_back(color);
+    Color_Space::Rgb rgb = Lch_ab.to_lab().to_xyz().to_rgb();
+
+    colors.push_back(rgb);
   }
 
   return colors;
@@ -206,16 +160,19 @@ std::vector<RGB> generateRainbowColors(int sampleCount) {
 // Map the given iteration count to an r,g,b color
 void ComplexPlane::iterationsToRGB(size_t count, u_int8_t &r, u_int8_t &g,
                                    u_int8_t &b) {
-  const static std::vector<RGB> colors = generateRainbowColors(MAX_ITER);
-
   if (count == MAX_ITER) {
     r = g = b = 0;
     return;
   }
 
-  r = colors[count].r;
-  g = colors[count].g;
-  b = colors[count].b;
+  const static std::vector<Color_Space::Rgb> colors =
+      generateRainbowColors(MAX_ITER);
+
+  auto [color_r, color_g, color_b] = colors[count].get_values();
+
+  r = color_r;
+  g = color_g;
+  b = color_b;
 }
 
 
