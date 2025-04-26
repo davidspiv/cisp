@@ -5,7 +5,7 @@
 
 constexpr int TARGET_FPS = 60;
 constexpr int ANTIALIAS_LEVEL = 8;
-constexpr char WINDOW_TITLE[] = "Template Demo";
+constexpr char WINDOW_TITLE[] = "Mandelbrot Set";
 
 void setup_window(sf::RenderWindow &window, const int width, const int height) {
   sf::ContextSettings settings;

@@ -2,6 +2,8 @@
 
 #include <SFML/Graphics.hpp>
 
+#include <complex>
+
 constexpr int SCREEN_WIDTH = 1920 / 4.0;
 constexpr int SCREEN_HEIGHT = 1080 / 4.0;
 
@@ -98,21 +100,35 @@ void ComplexPlane::updateRender() {
 };
 
 
-int ComplexPlane::countIterations(sf::Vector2f coord) { return 30; };
+int ComplexPlane::countIterations(sf::Vector2f coord) {
+  std::complex<double> c = {coord.x, coord.y};
+  std::complex<double> z = c;
+  int i = 0;
+  while (abs(z) < 2.0 && i < 64) {
+    z = z * z + c;
+    // cout << "z_" << i << "= " << z << endl;
+    // cout << "|z| = " << abs(c) << endl;
+    i++;
+  }
+
+  return i;
+};
 
 
 // Map the given iteration count to an r,g,b color
 void ComplexPlane::iterationsToRGB(size_t count, u_int8_t &r, u_int8_t &g,
                                    u_int8_t &b) {
-
+  if (count == 65) {
+    r = g = b = 255;
+  }
   r = g = b = static_cast<u_int8_t>(255.0 * count / MAX_ITER);
 }
 
 
 sf::Vector2f ComplexPlane::mapPixelToCoords(sf::Vector2i mousePixel) {
 
-  auto mapNumericRange = [](int n, int a, int b, int c, int d) {
-    return ((n - a) / (b - a)) * (d - c) + c;
+  auto mapNumericRange = [](int n, int a, int b, float c, float d) {
+    return ((float)(n - a) / (b - a)) * (d - c) + c;
   };
 
   const float x = mapNumericRange(mousePixel.x, 0, SCREEN_WIDTH, -2, 2);
