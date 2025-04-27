@@ -298,7 +298,8 @@ Xyz::Xyz(float x, float y, float z) : Color(x, y, z) {}
 
 
 Rgb Xyz::to_rgb() const {
-  const Matrix color_as_column = arr_to_column(REF_WHITE_D65);
+
+  const Matrix color_as_column = to_column();
 
   const Matrix M_matrix =
       create_to_xyz_transformation_matrix(REF_WHITE_D65).invert();

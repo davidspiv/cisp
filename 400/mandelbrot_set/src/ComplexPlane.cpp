@@ -134,21 +134,28 @@ int ComplexPlane::countIterations(sf::Vector2f coord) {
   return i;
 };
 
-struct RGB {
-  float r, g, b;
-};
 
+double normalize_degrees(double x) {
+  return x - std::floor(x / 360.0f) * 360.0f;
+}
 
-std::vector<Color_Space::Rgb> generateRainbowColors(int sampleCount) {
+std::vector<Color_Space::Rgb> getRainbowColors(int sample_count,
+                                               float startHue = 250.0f,
+                                               float rainbowPercent = 70.0f) {
   std::vector<Color_Space::Rgb> colors;
-  colors.reserve(sampleCount);
+  colors.reserve(sample_count);
 
-  for (int i = 0; i < sampleCount; ++i) {
-    float hue = (360.0f * i) / sampleCount; // hue from 0 to just under 360
+  float sample_degrees = (360.0f * rainbowPercent) / 100.0f;
 
-    Color_Space::Lch_Ab Lch_ab(.5f, .5f, hue);
+  for (int i = 0; i < sample_count; ++i) {
+    const float hue =
+        normalize_degrees(startHue + (sample_degrees * i) / (sample_count - 1));
 
-    Color_Space::Rgb rgb = Lch_ab.to_lab().to_xyz().to_rgb();
+    const Color_Space::Lch_Ab lch_ab(70, 60, hue);
+
+    const Color_Space::Lab lab = lch_ab.to_lab();
+    const Color_Space::Xyz xyz = lab.to_xyz();
+    const Color_Space::Rgb rgb = xyz.to_rgb(); // already clamps internally
 
     colors.push_back(rgb);
   }
@@ -166,7 +173,7 @@ void ComplexPlane::iterationsToRGB(size_t count, u_int8_t &r, u_int8_t &g,
   }
 
   const static std::vector<Color_Space::Rgb> colors =
-      generateRainbowColors(MAX_ITER);
+      getRainbowColors(MAX_ITER);
 
   auto [color_r, color_g, color_b] = colors[count].get_values();
 
