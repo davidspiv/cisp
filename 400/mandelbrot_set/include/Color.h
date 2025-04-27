@@ -65,6 +65,12 @@ public:
   Xyz to_xyz() const;
 
   /**
+   * @brief Converts Lab to cylindrical Lch(ab) format.
+   * @return the converted color as a Lch_Ab object
+   */
+  Lch_Ab to_lch_ab() const;
+
+  /**
    * @brief Prints Lab components to the console.
    */
   void print() const override;
@@ -143,6 +149,50 @@ public:
   void print() const;
 };
 
+
+// UTILS
+
+float to_radians(const float degrees) { return degrees * (M_PI / 180.f); }
+
+
+float to_degrees(const float radians) { return radians * (180.0 / M_PI); }
+
+
+float remove_gamma(float c) {
+  if (c <= 0) {
+    return c;
+  }
+
+  return (c <= 0.04045f) ? (c / 12.92f) : std::pow((c + 0.055f) / 1.055f, 2.4f);
+}
+
+
+float apply_gamma(const float c) {
+  if (c <= 0) {
+    return c;
+  }
+
+  return (c <= 0.0031308f) ? (c * 12.92f)
+                           : 1.055f * std::pow(c, 1.0f / 2.4f) - 0.055f;
+}
+
+
+double normalize_degrees(double x) {
+  return x - std::floor(x / 360.0f) * 360.0f;
+}
+
+
+std::array<float, 3>
+to_polar_color_space(const std::array<float, 3> &cartesianColor_Space) {
+  const auto [l, a, b] = cartesianColor_Space; // LchAb equivalents: a=u and b=v
+  const float c = std::sqrt(a * a + b * b);
+  const float h_component = to_degrees(std::atan2(b, a));
+  const float h = (h_component >= 0) ? h_component : h_component + 360.0;
+
+  return {l, c, h};
+}
+
+
 // COLOR
 
 Color::Color(float x, float y, float z) { m_values = {x, y, z}; }
@@ -203,6 +253,13 @@ Xyz Lab::to_xyz() const {
 }
 
 
+Lch_Ab Lab::to_lch_ab() const {
+  const auto [l, c, h] = to_polar_color_space(m_values);
+
+  return Lch_Ab(l, c, h);
+};
+
+
 void Lab::print() const {
   std::cout << "[Lab]" << "\nL: " << m_values[0] << "\na: " << m_values[1]
             << "\nb: " << m_values[2] << "\n\n";
@@ -210,9 +267,6 @@ void Lab::print() const {
 
 
 // LCH(ab)
-
-float to_radians(const float degrees) { return degrees * (M_PI / 180.0); }
-
 
 Lch_Ab::Lch_Ab(float l, float c, float h) : Color(l, c, h) {}
 
@@ -234,16 +288,7 @@ void Lch_Ab::print() const {
 }
 
 
-// RGB
-
-float remove_gamma(float c) {
-  if (c <= 0) {
-    return c;
-  }
-
-  return (c <= 0.04045f) ? (c / 12.92f) : std::pow((c + 0.055f) / 1.055f, 2.4f);
-}
-
+// sRGB
 
 Rgb::Rgb(float r, float g, float b) : Color(r, g, b) {
   auto validate = [](float c) {
@@ -283,16 +328,6 @@ void Rgb::print() const {
 
 
 // XYZ
-
-float apply_gamma(const float c) {
-  if (c <= 0) {
-    return c;
-  }
-
-  return (c <= 0.0031308f) ? (c * 12.92f)
-                           : 1.055f * std::pow(c, 1.0f / 2.4f) - 0.055f;
-}
-
 
 Xyz::Xyz(float x, float y, float z) : Color(x, y, z) {}
 
@@ -344,3 +379,53 @@ void Xyz::print() const {
 }
 
 } // namespace Color_Space
+
+/**
+ * @brief Generates a smooth rainbow of colors starting from a specified color.
+ *
+ * @param sample_count The number of colors to generate. Must be at least 2.
+ * @param start_color The color where the rainbow starts. Defaults to red.
+ * @param rainbow_percent The portion of the color wheel to cover, as a
+ * percentage (100 = full rainbow, 50 = half rainbow, etc.). Defaults to 100.
+ *
+ * @return std::vector<sf::Color> A list of colors smoothly transitioning across
+ * the specified portion of the rainbow.
+ */
+std::vector<sf::Color>
+get_rainbow_colors(int sample_count, sf::Color start_color = sf::Color::Red,
+                   float rainbow_percent = 100.f) {
+  if (sample_count < 2) {
+    throw std::domain_error(
+        "sample count must be >= 2 for correct interpolation.");
+  }
+
+  const float LIGHTNESS = 70.f;
+  const float CHROMA = 60.f;
+  const float sample_degrees = (360.0f * rainbow_percent) / 100.0f;
+  const auto [l, c, start_hue] =
+      Color_Space::Rgb(start_color.r, start_color.g, start_color.b)
+          .to_xyz()
+          .to_lab()
+          .to_lch_ab()
+          .get_values();
+
+  std::vector<sf::Color> colors;
+  colors.reserve(sample_count);
+
+  for (int i = 0; i < sample_count; ++i) {
+
+    const float hue = Color_Space::normalize_degrees(
+        start_hue + (sample_degrees * i) / (sample_count - 1));
+
+    const Color_Space::Lch_Ab lch_ab(LIGHTNESS, CHROMA, hue);
+    const Color_Space::Lab lab = lch_ab.to_lab();
+    const Color_Space::Xyz xyz = lab.to_xyz();
+
+    const auto [r, g, b] = xyz.to_rgb().get_values();
+
+    colors.push_back(sf::Color(static_cast<uint8_t>(r), static_cast<uint8_t>(g),
+                               static_cast<uint8_t>(b)));
+  }
+
+  return colors;
+}
