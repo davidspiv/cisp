@@ -143,7 +143,8 @@ void ComplexPlane::iterationsToRGB(size_t count, u_int8_t &r, u_int8_t &g,
     return;
   }
 
-  const static std::vector<sf::Color> colors = get_rainbow_colors(MAX_ITER);
+  const static std::vector<sf::Color> colors =
+      get_rainbow_colors(MAX_ITER, sf::Color::Blue, 300);
 
   sf::Color color = colors[count];
 
