@@ -90,6 +90,12 @@ public:
 
   [[nodiscard]] Lab to_lab() const;
 
+  float get_l() const { return m_values[0]; }
+
+  float get_c() const { return m_values[1]; }
+
+  float get_h() const { return m_values[2]; }
+
   /**
    * @brief Prints Lch(ab) components to the console.
    */

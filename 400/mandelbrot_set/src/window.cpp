@@ -11,8 +11,7 @@ void setup_window(sf::RenderWindow &window, const int width, const int height) {
                 settings);
 
   if (!window.isOpen()) {
-    throw std::runtime_error("Failed to create SFML window\n");
-    return;
+    throw std::runtime_error("Failed to create SFML window");
   }
 
   std::cout << "Anti-Aliasing: "

@@ -196,32 +196,127 @@ Color_Space::Lch_Ab interpolate_lchab(const Color_Space::Lch_Ab &a,
 }
 
 
-std::vector<sf::Color>
-get_gradient_colors(int total_samples,
-                    const std::vector<Color_Space::Lch_Ab> &keypoints) {
+// A color curve segment
+struct ColorSegment {
+  Color_Space::Lch_Ab start;
+  Color_Space::Lch_Ab end;
+  float t_start; // global t where this segment begins (0.0 - 1.0)
+  float t_end;   // global t where this segment ends (0.0 - 1.0)
 
-
-  if (keypoints.size() < 2) {
-    throw std::domain_error("Need at least 2 keypoints to interpolate.");
+  // Linear interpolation inside this segment
+  Color_Space::Lch_Ab sample(float t) const {
+    float local_t = (t - t_start) / (t_end - t_start);
+    local_t = std::clamp(local_t, 0.f, 1.f);
+    return interpolate_lchab(start, end, local_t);
   }
+};
 
-  std::vector<sf::Color> colors;
-  colors.reserve(total_samples);
+// The whole color curve
+class ColorCurve {
+public:
+  std::vector<ColorSegment> segments;
 
-  size_t segments = keypoints.size() - 1;
-  int samples_per_segment = total_samples / segments;
-  int leftover_samples = total_samples % segments;
-
-  for (size_t i = 0; i < segments; ++i) {
-    int current_segment_samples =
-        samples_per_segment + (static_cast<int>(i) < leftover_samples ? 1 : 0);
-
-    for (int j = 0; j < current_segment_samples; ++j) {
-      float t = (float)j / (current_segment_samples - 1);
-      auto lch = interpolate_lchab(keypoints[i], keypoints[i + 1], t);
-      auto [r, g, b] = lch.to_lab().to_xyz().to_rgb().get_values();
-      colors.push_back(sf::Color(r, g, b));
+  // Sample the full curve at [0,1]
+  Color_Space::Lch_Ab sample(float t) const {
+    t = std::clamp(t, 0.f, 1.f);
+    for (const auto &seg : segments) {
+      if (t >= seg.t_start && t <= seg.t_end) {
+        return seg.sample(t);
+      }
     }
+    // Edge case: if t == 1.0 exactly
+    return segments.back().end;
+  }
+};
+
+// Catmull-Rom interpolation for scalar values
+float catmull_rom(float p0, float p1, float p2, float p3, float t) {
+  return 0.5f * ((2.0f * p1) + (-p0 + p2) * t +
+                 (2.0f * p0 - 5.0f * p1 + 4.0f * p2 - p3) * t * t +
+                 (-p0 + 3.0f * p1 - 3.0f * p2 + p3) * t * t * t);
+}
+
+// For hue, we need to handle circular interpolation
+float catmull_rom_hue(float h0, float h1, float h2, float h3, float t) {
+  auto unwrap = [](float a, float ref) {
+    while (a - ref > 180.f)
+      a -= 360.f;
+    while (a - ref < -180.f)
+      a += 360.f;
+    return a;
+  };
+  // unwrap all hues relative to h1
+  h0 = unwrap(h0, h1);
+  h2 = unwrap(h2, h1);
+  h3 = unwrap(h3, h2); // slightly different: h3 relative to h2
+
+  float hue = catmull_rom(h0, h1, h2, h3, t);
+  hue = fmodf(hue + 360.f, 360.f);
+  return hue;
+}
+
+// Curve based on control points
+class SplineColorCurve {
+public:
+  std::vector<Color_Space::Lch_Ab> points;
+
+  Color_Space::Lch_Ab sample(float t) const {
+    t = std::clamp(t, 0.f, 1.f);
+    if (points.size() < 2) {
+      throw std::domain_error("Need at least 2 control points");
+    }
+
+    float scaled_t = t * (points.size() - 1); // t over total segments
+    int i1 = static_cast<int>(scaled_t);
+    float local_t = scaled_t - i1;
+
+    // Clamp indices
+    int i0 = std::max(i1 - 1, 0);
+    int i2 = std::min(i1 + 1, (int)points.size() - 1);
+    int i3 = std::min(i1 + 2, (int)points.size() - 1);
+
+    const auto &p0 = points[i0];
+    const auto &p1 = points[i1];
+    const auto &p2 = points[i2];
+    const auto &p3 = points[i3];
+
+    float L =
+        catmull_rom(p0.get_l(), p1.get_l(), p2.get_l(), p3.get_l(), local_t);
+    float C =
+        catmull_rom(p0.get_c(), p1.get_c(), p2.get_c(), p3.get_c(), local_t);
+    float H = catmull_rom_hue(p0.get_h(), p1.get_h(), p2.get_h(), p3.get_h(),
+                              local_t);
+
+    return Color_Space::Lch_Ab(L, C, H);
+  }
+};
+
+
+std::vector<sf::Color> make_spline_gradient(int sample_count,
+                                            const SplineColorCurve &curve) {
+  std::vector<sf::Color> colors;
+  colors.reserve(sample_count);
+
+  for (int i = 0; i < sample_count; ++i) {
+    float t = (float)i / (sample_count - 1);
+    auto lch = curve.sample(t);
+    auto [r, g, b] = lch.to_lab().to_xyz().to_rgb().get_values();
+    colors.push_back(sf::Color(r, g, b));
+  }
+  return colors;
+}
+
+
+std::vector<sf::Color> get_gradient_colors(const int sample_count,
+                                           const ColorCurve &curve) {
+  std::vector<sf::Color> colors;
+  colors.reserve(sample_count);
+
+  for (int i = 0; i < sample_count; ++i) {
+    float t = (float)i / (sample_count - 1);
+    auto lch = curve.sample(t);
+    auto [r, g, b] = lch.to_lab().to_xyz().to_rgb().get_values();
+    colors.push_back(sf::Color(r, g, b));
   }
 
   return colors;
@@ -234,18 +329,24 @@ void ComplexPlane::iterationsToRGB(size_t count, u_int8_t &r, u_int8_t &g,
   //   const static std::vector<sf::Color> colors =
   //       get_rainbow_colors(MAX_ITER, sf::Color::Blue, 300);
 
+  static auto blue = Color_Space::Rgb(14, 7, 37).to_xyz().to_lab().to_lch_ab();
   static auto purple =
-      Color_Space::Rgb(128, 0, 128).to_xyz().to_lab().to_lch_ab();
-  static auto blue = Color_Space::Rgb(0, 0, 255).to_xyz().to_lab().to_lch_ab();
+      Color_Space::Rgb(62, 25, 110).to_xyz().to_lab().to_lch_ab();
+  static auto sherbert =
+      Color_Space::Rgb(255, 96, 123).to_xyz().to_lab().to_lch_ab();
+  static auto rose =
+      Color_Space::Rgb(212, 108, 118).to_xyz().to_lab().to_lch_ab();
+  static auto orange =
+      Color_Space::Rgb(252, 159, 50).to_xyz().to_lab().to_lch_ab();
   static auto yellow =
-      Color_Space::Rgb(255, 255, 0).to_xyz().to_lab().to_lch_ab();
+      Color_Space::Rgb(255, 226, 124).to_xyz().to_lab().to_lch_ab();
   static auto white =
       Color_Space::Rgb(255, 255, 255).to_xyz().to_lab().to_lch_ab();
 
-  static std::vector<Color_Space::Lch_Ab> keypoints = {purple, blue, yellow,
-                                                       white};
+  SplineColorCurve curve;
+  curve.points = {blue, purple, rose, orange, yellow, white};
 
-  const static auto colors = get_gradient_colors(MAX_ITER, keypoints);
+  const static auto colors = make_spline_gradient(MAX_ITER, curve);
 
   if (count == MAX_ITER) {
     r = g = b = 0;
