@@ -135,16 +135,116 @@ int ComplexPlane::countIterations(sf::Vector2f coord) {
 };
 
 
+std::vector<sf::Color>
+get_rainbow_colors(int sample_count, sf::Color start_color = sf::Color::Red,
+                   float rainbow_percent = 100.f) {
+  if (sample_count < 2) {
+    throw std::domain_error(
+        "sample count must be >= 2 for correct interpolation.");
+  }
+
+  const float LIGHTNESS = 70.f;
+  const float CHROMA = 60.f;
+  const float sample_degrees = (360.0f * rainbow_percent) / 100.0f;
+
+  auto [l, c, start_hue] =
+      Color_Space::Rgb(start_color.r, start_color.g, start_color.b)
+          .to_xyz()
+          .to_lab()
+          .to_lch_ab()
+          .get_values();
+
+  start_hue -= 20.f; // offset to match perceived color
+
+  std::vector<sf::Color> colors;
+  colors.reserve(sample_count);
+
+  for (int i = 0; i < sample_count; ++i) {
+
+    const float hue = Color_Space::normalize_degrees(
+        start_hue + (sample_degrees * i) / (sample_count - 1));
+
+    const Color_Space::Lch_Ab lch_ab(LIGHTNESS, CHROMA, hue);
+
+    const auto [r, g, b] = lch_ab.to_lab().to_xyz().to_rgb().get_values();
+
+    colors.push_back(sf::Color(static_cast<uint8_t>(r), static_cast<uint8_t>(g),
+                               static_cast<uint8_t>(b)));
+  }
+
+  return colors;
+}
+
+
+float interpolate_angle(float a, float b, float t) {
+  float delta = fmodf(b - a + 540.0f, 360.0f) - 180.0f;
+  return fmodf(a + delta * t + 360.0f, 360.0f);
+}
+
+
+// Interpolate between two LCHab colors
+Color_Space::Lch_Ab interpolate_lchab(const Color_Space::Lch_Ab &a,
+                                      const Color_Space::Lch_Ab &b, float t) {
+
+  const auto [a_l, a_c, a_h] = a.get_values();
+  const auto [b_l, b_c, b_h] = b.get_values();
+
+  float L = a_l * (1.0f - t) + b_l * t;
+  float C = a_c * (1.0f - t) + b_c * t;
+  float H = interpolate_angle(a_h, b_h, t);
+  return Color_Space::Lch_Ab(L, C, H);
+}
+
+
+std::vector<sf::Color>
+get_gradient_colors(int total_samples,
+                    const std::vector<Color_Space::Lch_Ab> &keypoints) {
+  if (keypoints.size() < 2) {
+    throw std::domain_error("Need at least 2 keypoints to interpolate.");
+  }
+
+  std::vector<sf::Color> colors;
+  colors.reserve(total_samples);
+
+  size_t segments = keypoints.size() - 1;
+  int samples_per_segment = total_samples / segments;
+  int leftover_samples = total_samples % segments;
+
+  for (size_t i = 0; i < segments; ++i) {
+    int current_segment_samples =
+        samples_per_segment + (static_cast<int>(i) < leftover_samples ? 1 : 0);
+
+    for (int j = 0; j < current_segment_samples; ++j) {
+      float t = (float)j / (current_segment_samples - 1);
+      auto lch = interpolate_lchab(keypoints[i], keypoints[i + 1], t);
+      auto [r, g, b] = lch.to_lab().to_xyz().to_rgb().get_values();
+      colors.push_back(sf::Color(r, g, b));
+    }
+  }
+
+  return colors;
+}
+
+auto purple = Color_Space::Rgb(128, 0, 128).to_xyz().to_lab().to_lch_ab();
+auto blue = Color_Space::Rgb(0, 0, 255).to_xyz().to_lab().to_lch_ab();
+auto yellow = Color_Space::Rgb(255, 255, 0).to_xyz().to_lab().to_lch_ab();
+auto white = Color_Space::Rgb(255, 255, 255).to_xyz().to_lab().to_lch_ab();
+
+std::vector<Color_Space::Lch_Ab> keypoints = {purple, blue, yellow, white};
+
+
 // Map the given iteration count to an r,g,b color
 void ComplexPlane::iterationsToRGB(size_t count, u_int8_t &r, u_int8_t &g,
                                    u_int8_t &b) {
+  //   const static std::vector<sf::Color> colors =
+  //       get_rainbow_colors(MAX_ITER, sf::Color::Blue, 300);
+
+  const static auto colors = get_gradient_colors(MAX_ITER, keypoints);
+
   if (count == MAX_ITER) {
     r = g = b = 0;
     return;
   }
-
-  const static std::vector<sf::Color> colors =
-      get_rainbow_colors(MAX_ITER, sf::Color::Blue, 300);
 
   sf::Color color = colors[count];
 
