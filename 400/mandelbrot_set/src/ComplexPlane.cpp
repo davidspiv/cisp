@@ -199,6 +199,8 @@ Color_Space::Lch_Ab interpolate_lchab(const Color_Space::Lch_Ab &a,
 std::vector<sf::Color>
 get_gradient_colors(int total_samples,
                     const std::vector<Color_Space::Lch_Ab> &keypoints) {
+
+
   if (keypoints.size() < 2) {
     throw std::domain_error("Need at least 2 keypoints to interpolate.");
   }
@@ -225,19 +227,23 @@ get_gradient_colors(int total_samples,
   return colors;
 }
 
-auto purple = Color_Space::Rgb(128, 0, 128).to_xyz().to_lab().to_lch_ab();
-auto blue = Color_Space::Rgb(0, 0, 255).to_xyz().to_lab().to_lch_ab();
-auto yellow = Color_Space::Rgb(255, 255, 0).to_xyz().to_lab().to_lch_ab();
-auto white = Color_Space::Rgb(255, 255, 255).to_xyz().to_lab().to_lch_ab();
-
-std::vector<Color_Space::Lch_Ab> keypoints = {purple, blue, yellow, white};
-
 
 // Map the given iteration count to an r,g,b color
 void ComplexPlane::iterationsToRGB(size_t count, u_int8_t &r, u_int8_t &g,
                                    u_int8_t &b) {
   //   const static std::vector<sf::Color> colors =
   //       get_rainbow_colors(MAX_ITER, sf::Color::Blue, 300);
+
+  static auto purple =
+      Color_Space::Rgb(128, 0, 128).to_xyz().to_lab().to_lch_ab();
+  static auto blue = Color_Space::Rgb(0, 0, 255).to_xyz().to_lab().to_lch_ab();
+  static auto yellow =
+      Color_Space::Rgb(255, 255, 0).to_xyz().to_lab().to_lch_ab();
+  static auto white =
+      Color_Space::Rgb(255, 255, 255).to_xyz().to_lab().to_lch_ab();
+
+  static std::vector<Color_Space::Lch_Ab> keypoints = {purple, blue, yellow,
+                                                       white};
 
   const static auto colors = get_gradient_colors(MAX_ITER, keypoints);
 
